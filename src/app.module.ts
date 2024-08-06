@@ -1,24 +1,41 @@
 import { Logger, Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import { UserModule } from './user/user.module';
+import { MailerModule } from '@nestjs-modules/mailer';
 
 @Module({
   imports: [
-    // mongoDb connection
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      envFilePath: '.env',
+      isGlobal: true,
+    }),
+    // MongoDB connection
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (ConfigService: ConfigService) => {
-        const uri = ConfigService.get<string>('MONGO_URI');
-        Logger.log(`MongoDB connected to ${uri}`, 'MongooseModule');
+      useFactory: async (configService: ConfigService) => {
+        const uri = configService.get<string>('MONGO_URI');
+        Logger.log(`Connecting to MongoDB at ${uri}`, 'MongooseModule');
         return { uri };
       },
       inject: [ConfigService],
     }),
+    // Mailer configuration
+    MailerModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        transport: {
+          host: configService.get<string>('SMTP_HOST'),
+          port: configService.get<number>('SMTP_PORT'),
+          auth: {
+            user: configService.get<string>('SMTP_USER'),
+            pass: configService.get<string>('SMTP_PASS'),
+          },
+        },
+      }),
+      inject: [ConfigService],
+    }),
+    UserModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
