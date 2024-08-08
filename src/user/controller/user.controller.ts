@@ -1,8 +1,10 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   HttpException,
   HttpStatus,
+  NotFoundException,
   Post,
 } from '@nestjs/common';
 import { UserService } from '../service/user.service';
@@ -36,8 +38,25 @@ export class UserController {
       await this.userService.verifyUser(VerifyOtpDto.email);
       return { message: 'OTP verified successfully' };
     } catch (error) {
-      console.error(error);
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      if (error instanceof NotFoundException) {
+        throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+      } else if (error instanceof BadRequestException) {
+        throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      } else {
+        throw new HttpException(
+          'An unexpected error occurred',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+    }
+  }
+
+  @Post('/resent-otp')
+  async resendOtp(@Body('email') email: string) {
+    try {
+      await this.OtpService.sendOtp(email);
+    } catch (error) {
+      console.log(error);
     }
   }
 }

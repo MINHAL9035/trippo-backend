@@ -7,7 +7,7 @@ export class Otp extends Document {
   email: string;
 
   @Prop({ required: true, minlength: 6, maxlength: 6 })
-  otp: string;
+  otp: number;
 
   @Prop({ required: true })
   createdAt: Date;

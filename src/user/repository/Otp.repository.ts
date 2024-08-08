@@ -12,7 +12,7 @@ export class OtpRepository {
       email,
       otp,
       createdAt: new Date(),
-      expiresAt: new Date(Date.now() + 2 * 60000),
+      expiresAt: new Date(Date.now() + 1 * 60000),
     });
     return newOtp.save();
   }

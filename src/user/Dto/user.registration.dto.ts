@@ -13,7 +13,7 @@ export class UserRegistrationDto {
   firstName: string;
 
   @IsString()
-  @MinLength(2, { message: 'Last name must be at least 2 characters long' })
+  @MinLength(1, { message: 'Last name must be at least 2 characters long' })
   @MaxLength(50, { message: 'Last name must not exceed 50 characters' })
   lastName: string;
 

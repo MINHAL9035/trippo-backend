@@ -40,10 +40,4 @@ export class UserRepository {
   async deleteUnverifiedUser(email: string): Promise<void> {
     await this.UnverifiedUserModel.deleteOne({ email }).exec();
   }
-
-  async updateUser(user: UserInterface): Promise<UserInterface> {
-    return await this.userModel
-      .findByIdAndUpdate(user.id, user, { new: true })
-      .exec();
-  }
 }
