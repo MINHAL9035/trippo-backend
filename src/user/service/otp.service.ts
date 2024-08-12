@@ -5,30 +5,45 @@ import {
 } from '@nestjs/common';
 import { OtpRepository } from '../repository/Otp.repository';
 import * as crypto from 'crypto';
-import { OTP } from '../interface/Otp.interface';
+import { OTP } from '../interface/otp/IOtp.interface';
 import { ConfigService } from '@nestjs/config';
 import { MailerService } from '@nestjs-modules/mailer';
+import { IOtpService } from '../interface/otp/IOtpService.interface';
 
 @Injectable()
-export class OtpService {
+export class OtpService implements IOtpService {
   constructor(
-    private readonly OtpRepository: OtpRepository,
-    private readonly MailerService: MailerService,
-    private readonly ConfigService: ConfigService,
+    private readonly _otpRepository: OtpRepository,
+    private readonly _mailerService: MailerService,
+    private readonly _configService: ConfigService,
   ) {}
 
+  /**
+   * Generates a 6-digit OTP.
+   * @returns - A random 6-digit OTP.
+   */
   private generateOtp(): number {
     return crypto.randomInt(100000, 999999);
   }
 
+  /**
+   * Creates a new OTP for the given email, deleting any previous OTPs.
+   * @param email - The user's email address.
+   * @returns - The created OTP record.
+   */
   async createOtp(email: string): Promise<OTP> {
-    await this.OtpRepository.deleteByEmail(email);
+    await this._otpRepository.deleteByEmail(email);
     const otp = this.generateOtp();
-    return this.OtpRepository.saveOtp(email, otp);
+    return this._otpRepository.saveOtp(email, otp);
   }
 
+  /**
+   * Sends the OTP to the user's email with a formatted HTML email.
+   * @param email - The user's email address.
+   * @param otp - The OTP to send.
+   */
   async sendOtpEmail(email: string, otp: number): Promise<void> {
-    const from = this.ConfigService.get<string>('EMAIL_From');
+    const from = this._configService.get<string>('EMAIL_From');
     const websiteName = 'Trippo';
 
     const htmlContent = `
@@ -74,7 +89,7 @@ export class OtpService {
       </html>
     `;
 
-    await this.MailerService.sendMail({
+    await this._mailerService.sendMail({
       to: email,
       from: from,
       subject: `Your Verification Code for ${websiteName}`,
@@ -83,13 +98,24 @@ export class OtpService {
     });
   }
 
+  /**
+   * Creates and sends a new OTP to the given email.
+   * @param email - The user's email address.
+   */
   async sendOtp(email: string): Promise<void> {
     const otpRecord = await this.createOtp(email);
     await this.sendOtpEmail(email, otpRecord.otp);
   }
 
+  /**
+   * Verifies the provided OTP for the given email.
+   * @param email - The user's email address.
+   * @param otp - The OTP to verify.
+   * @throws NotFoundException if no OTP is found for the email.
+   * @throws BadRequestException if the OTP is invalid or expired.
+   */
   async verifyOtp(email: string, otp: number): Promise<void> {
-    const otpRecord = await this.OtpRepository.findByEmail(email);
+    const otpRecord = await this._otpRepository.findByEmail(email);
 
     if (!otpRecord) {
       throw new NotFoundException('OTP not found for this email');
@@ -104,6 +130,6 @@ export class OtpService {
         'OTP has expired , please request for new one',
       );
     }
-    await this.OtpRepository.deleteByEmail(email);
+    await this._otpRepository.deleteByEmail(email);
   }
 }

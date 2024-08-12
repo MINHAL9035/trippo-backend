@@ -25,7 +25,7 @@ export class User extends Document {
 
 export const UserSchema = SchemaFactory.createForClass(User);
 
-// Hash the user's password
+// Hash the user's password before saving
 UserSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     return next();
@@ -34,9 +34,3 @@ UserSchema.pre('save', async function (next) {
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
-
-UserSchema.methods.comparePassword = async function (
-  newPassword: string,
-): Promise<boolean> {
-  return bcrypt.compare(newPassword, this.password);
-};

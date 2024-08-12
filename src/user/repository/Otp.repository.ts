@@ -2,13 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Otp } from '../schema/Otp.schema';
 import { Model } from 'mongoose';
-import { OTP } from '../interface/Otp.interface';
+import { OTP } from '../interface/otp/IOtp.interface';
+import { IOtpRepository } from '../interface/otp/IOtpRepository';
 
 @Injectable()
-export class OtpRepository {
-  constructor(@InjectModel(Otp.name) private otpModel: Model<OTP>) {}
+export class OtpRepository implements IOtpRepository {
+  constructor(@InjectModel(Otp.name) private _otpModel: Model<Otp>) {}
   async saveOtp(email: string, otp: number): Promise<OTP> {
-    const newOtp = new this.otpModel({
+    const newOtp = new this._otpModel({
       email,
       otp,
       createdAt: new Date(),
@@ -18,14 +19,11 @@ export class OtpRepository {
   }
 
   async deleteByEmail(email: string): Promise<void> {
-    await this.otpModel.deleteMany({ email }).exec();
+    await this._otpModel.deleteMany({ email }).exec();
   }
 
   async findByEmail(email: string): Promise<OTP | null> {
-    console.log('rep email', email);
-    const ots = await this.otpModel.findOne({ email }).exec();
-    console.log('shdjs', ots);
-
+    const ots = await this._otpModel.findOne({ email }).exec();
     return ots;
   }
 }

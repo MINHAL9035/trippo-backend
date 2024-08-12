@@ -19,6 +19,6 @@ import { OtpRepository } from './repository/Otp.repository';
   ],
   controllers: [UserController],
   providers: [UserService, UserRepository, OtpService, OtpRepository],
-  exports: [UserService, UserRepository],
+  exports: [UserService, UserRepository, MongooseModule],
 })
 export class UserModule {}

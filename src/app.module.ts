@@ -3,6 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserModule } from './user/user.module';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { AuthModule } from './auth/auth.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -10,6 +12,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
       envFilePath: '.env',
       isGlobal: true,
     }),
+
     // MongoDB connection
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
@@ -20,6 +23,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
       },
       inject: [ConfigService],
     }),
+
     // Mailer configuration
     MailerModule.forRootAsync({
       imports: [ConfigModule],
@@ -36,6 +40,8 @@ import { MailerModule } from '@nestjs-modules/mailer';
       inject: [ConfigService],
     }),
     UserModule,
+    AuthModule,
+    AdminModule,
   ],
 })
 export class AppModule {}
