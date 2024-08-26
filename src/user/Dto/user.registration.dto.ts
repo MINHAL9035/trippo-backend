@@ -1,5 +1,6 @@
 import {
   IsEmail,
+  IsNotEmpty,
   IsString,
   Matches,
   MaxLength,
@@ -27,4 +28,8 @@ export class UserRegistrationDto {
     message: 'Password is too weak',
   })
   password: string;
+
+  @IsString()
+  @IsNotEmpty()
+  role: 'user' | 'admin';
 }

@@ -1,91 +1,143 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { AdminLoginRepository } from '../respository/admin.repository';
-import { LoginDto } from 'src/auth/Dto/login.dto';
-import { Response } from 'express';
+import { JwtService } from '@nestjs/jwt';
+import { LoginDto } from 'src/auth/dto/login.dto';
 import * as bcrypt from 'bcrypt';
-import { Types } from 'mongoose';
-import { v4 as uuidv4 } from 'uuid';
-import { IAuthService } from 'src/interface/IAuthService.interface';
+import { Model, Types } from 'mongoose';
+import { Response } from 'express';
+import {
+  clearAdminTokenCookies,
+  generateAdminTokens,
+  setAdminTokenCookies,
+} from '../utils/adminLogin.utils';
+import { ConfigService } from '@nestjs/config';
+import { UpdateUserStatusDto } from '../dto/updateUserStatus.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { User } from 'src/user/schema/user.schema';
 
 @Injectable()
-export class AdminService implements IAuthService {
+export class AdminService {
   constructor(
-    private readonly JwtService: JwtService,
-    private readonly AdminLoginRepository: AdminLoginRepository,
+    private readonly _adminRepository: AdminLoginRepository,
+    private readonly _jwtService: JwtService,
+    private readonly configService: ConfigService,
+    @InjectModel(User.name) private userModel: Model<User>,
   ) {}
 
   /**
-   * Handles admin login, validates credentials, and sets authentication cookies.
-   * @param LoginDto - DTO containing login details (email and password).
-   * @param res - Express response object to set cookies.
-   * @returns - Object containing accessToken, refreshToken, userId, and email.
+   * Logs in an admin by validating their credentials and generating tokens.
+   * @param LoginDto - The login details.
+   * @param res - The response object to set cookies.
+   * @returns A Promise that resolves with admin details and tokens.
    */
-  async login(LoginDto: LoginDto, res: Response) {
+  async loginAdmin(
+    LoginDto: LoginDto,
+    res: Response,
+  ): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    userId: string;
+    email: string;
+    role: string;
+  }> {
     const { password } = LoginDto;
-    const admin = await this.AdminLoginRepository.findUser(LoginDto);
-    if (!admin) {
-      throw new UnauthorizedException('wrong admin credentials ');
+    const user = await this._adminRepository.find(LoginDto);
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
     }
-    const passwordMatch = await bcrypt.compare(password, admin.password);
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
-      throw new UnauthorizedException('Wrong password');
+      throw new UnauthorizedException('Invalid credentials');
     }
-    const tokens = await this.generateUserTokens(admin._id as Types.ObjectId);
-    res.cookie('adminAccessToken', tokens.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000,
-    });
+
+    if (user.role !== 'admin') {
+      throw new UnauthorizedException('Access denied: Admins only');
+    }
+
+    console.log('fdfd0');
+
+    const tokens = await generateAdminTokens(
+      user._id as Types.ObjectId,
+      user.role,
+      this._jwtService,
+      this._adminRepository,
+      this.configService,
+    );
+    console.log('effdf');
+
+    setAdminTokenCookies(res, tokens);
+
     return {
-      ...tokens,
-      userId: admin._id.toString(),
-      email: admin.email,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      userId: user._id.toString(),
+      email: user.email,
+      role: user.role,
     };
   }
 
-  /**
-   * Generates access and refresh tokens for an admin.
-   * @param userId - Admin's unique identifier.
-   * @returns - Object containing accessToken and refreshToken.
-   */
-  async generateUserTokens(userId: Types.ObjectId) {
-    const accessToken = this.JwtService.sign({ userId });
-    const refreshToken = uuidv4();
-    await this.AdminLoginRepository.storeRefreshToken(refreshToken, userId);
-    return {
-      accessToken,
-      refreshToken,
-    };
-  }
-
-  /**
-   * Refreshes tokens using a valid refresh token.
-   * @param refreshToken - The refresh token to validate.
-   * @returns - Object containing new accessToken and refreshToken.
-   */
-  async refreshTokens(refreshToken: string) {
-    const token =
-      await this.AdminLoginRepository.findRefreshToken(refreshToken);
+  async AdminRefreshTokens(
+    refreshToken: string,
+    res: Response,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const token = await this._adminRepository.findRefreshToken(refreshToken);
     if (!token) {
       throw new UnauthorizedException('Refresh Token is Invalid!');
     }
-    return this.generateUserTokens(token.userId);
+    const user = await this._adminRepository.findUserById(token.userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    const newTokens = await generateAdminTokens(
+      user._id as Types.ObjectId,
+      user.role,
+      this._jwtService,
+      this._adminRepository,
+      this.configService,
+    );
+    setAdminTokenCookies(res, newTokens);
+    return newTokens;
   }
 
-  /**
-   * Logs out an admin by clearing the authentication cookie.
-   * @param res - Express response object to clear cookies.
-   * @returns - Object with a message indicating successful logout.
-   */
-  async userLogout(res: Response) {
-    res.cookie('adminAccessToken', '', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      expires: new Date(0),
-    });
+  async logout(res: Response): Promise<{ message: string }> {
+    clearAdminTokenCookies(res);
     return { message: 'Logged out successfully' };
+  }
+
+  async getAllUsers(
+    page: number,
+    usersPerPage: number,
+  ): Promise<{ users: User[]; totalPages: number }> {
+    const skip = (page - 1) * usersPerPage;
+    const totalUsers = await this.userModel.countDocuments();
+    const users = await this.userModel
+      .find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(usersPerPage)
+      .exec();
+    const totalPages = Math.ceil(totalUsers / usersPerPage);
+
+    return {
+      users,
+      totalPages,
+    };
+  }
+
+  async updateStatus(updateUserStatusDto: UpdateUserStatusDto) {
+    const { userIds, action } = updateUserStatusDto;
+    const isBlocked = action === 'block';
+
+    const result = await this.userModel.updateMany(
+      { _id: { $in: userIds } },
+      { $set: { is_blocked: isBlocked } },
+    );
+
+    return {
+      message: `${result.modifiedCount} users ${action}ed successfully`,
+      modifiedCount: result.modifiedCount,
+    };
   }
 }

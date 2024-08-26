@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { UserRepository } from '../repository/user.repository';
@@ -11,6 +12,7 @@ import { IUserService } from '../interface/user/IUserService.interface';
 
 @Injectable()
 export class UserService implements IUserService {
+  private readonly _logger = new Logger(UserService.name);
   constructor(private readonly _userRepository: UserRepository) {}
 
   /**
@@ -37,6 +39,7 @@ export class UserService implements IUserService {
     const UnverifiedUser: UnverifiedUserInterface = {
       ...userDto,
       verified: false,
+      role: userDto.role,
     };
     return await this._userRepository.createUnverifiedUser(UnverifiedUser);
   }
@@ -65,9 +68,18 @@ export class UserService implements IUserService {
       email: unverifiedUser.email,
       password: unverifiedUser.password,
       verified: true,
-      isAdmin: false,
+      role: unverifiedUser.role,
     };
     await this._userRepository.createUser(verifiedUser);
     await this._userRepository.deleteUnverifiedUser(email);
+  }
+
+  async getUserDetails(email: string): Promise<UserInterface> {
+    const user = await this._userRepository.findByEmail(email);
+    this._logger.log('my fff', user);
+    if (!user) {
+      throw new NotFoundException(`User with email ${email} not found`);
+    }
+    return user;
   }
 }

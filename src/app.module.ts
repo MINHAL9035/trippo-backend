@@ -5,13 +5,18 @@ import { UserModule } from './user/user.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
+import { WinstonModule } from 'nest-winston';
+import { winstonConfig } from './common/config/logger.config';
+import { TripModule } from './trip/trip.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: '.env',
       isGlobal: true,
     }),
+
+    // logger
+    WinstonModule.forRoot(winstonConfig),
 
     // MongoDB connection
     MongooseModule.forRootAsync({
@@ -42,6 +47,7 @@ import { AdminModule } from './admin/admin.module';
     UserModule,
     AuthModule,
     AdminModule,
+    TripModule,
   ],
 })
 export class AppModule {}

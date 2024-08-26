@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { OtpRepository } from '../repository/Otp.repository';
@@ -12,6 +13,7 @@ import { IOtpService } from '../interface/otp/IOtpService.interface';
 
 @Injectable()
 export class OtpService implements IOtpService {
+  private readonly _logger = new Logger(OtpService.name);
   constructor(
     private readonly _otpRepository: OtpRepository,
     private readonly _mailerService: MailerService,
@@ -34,6 +36,7 @@ export class OtpService implements IOtpService {
   async createOtp(email: string): Promise<OTP> {
     await this._otpRepository.deleteByEmail(email);
     const otp = this.generateOtp();
+    this._logger.log('generated otp', otp);
     return this._otpRepository.saveOtp(email, otp);
   }
 

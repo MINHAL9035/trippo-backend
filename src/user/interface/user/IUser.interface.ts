@@ -4,7 +4,8 @@ export interface UserInterface {
   lastName: string;
   email: string;
   password: string;
-  isAdmin?: boolean;
   verified?: boolean;
-  createdAt?: Date;
+  is_blocked?: boolean;
+  image?: string;
+  role: string;
 }

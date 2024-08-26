@@ -15,11 +15,17 @@ export class UnverifiedUser extends Document {
   @Prop({ required: true })
   password: string;
 
+  @Prop({ default: 'https://github.com/shadcn.png' })
+  image: string;
+
   @Prop({ default: false })
   verified: boolean;
 
   @Prop({ default: false })
-  isAdmin: boolean;
+  is_blocked: boolean;
+
+  @Prop({ required: true, enum: ['user', 'admin'], default: 'user' })
+  role: string;
 }
 
 export const unverifiedUserSchema =

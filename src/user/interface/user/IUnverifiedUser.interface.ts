@@ -5,4 +5,5 @@ export interface UnverifiedUserInterface {
   email: string;
   password: string;
   verified?: boolean;
+  role: string;
 }

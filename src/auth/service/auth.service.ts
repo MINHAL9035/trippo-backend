@@ -1,27 +1,31 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { LoginDto } from '../dto/login.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { Types } from 'mongoose';
-import { v4 as uuidv4 } from 'uuid';
 import { Response } from 'express';
 import { LoginRepository } from '../repository/login.repository';
-import { IAuthService } from 'src/interface/IAuthService.interface';
+import {
+  clearTokenCookies,
+  generateTokens,
+  setTokenCookies,
+} from '../utils/loginUtils';
 
 @Injectable()
-export class AuthService implements IAuthService {
+export class AuthService {
+  private readonly _logger = new Logger(AuthService.name);
   constructor(
     private readonly _loginRepository: LoginRepository,
     private readonly _jwtService: JwtService,
   ) {}
 
   /**
-   * Logs in a user by validating their credentials and generating tokens.
+   * Logs in a regular user by validating their credentials and generating tokens.
    * @param LoginDto - The login details.
    * @param res - The response object to set cookies.
    * @returns A Promise that resolves with user details and tokens.
    */
-  async login(
+  async loginUser(
     LoginDto: LoginDto,
     res: Response,
   ): Promise<{
@@ -29,51 +33,39 @@ export class AuthService implements IAuthService {
     refreshToken: string;
     userId: string;
     email: string;
+    role: string;
+    image: string;
   }> {
     const { password } = LoginDto;
-    const user = await this._loginRepository.findUser(LoginDto);
-
+    const user = await this._loginRepository.find(LoginDto);
+    this._logger.log('dfkgnkad', user);
     if (!user) {
-      throw new UnauthorizedException('Wrong details');
+      throw new Error('Invalid credentials');
+    }
+    if (user.is_blocked === true) {
+      throw new UnauthorizedException('Your account is blocked');
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
-      throw new UnauthorizedException('Wrong password');
+      throw new UnauthorizedException('Invalid credentials');
     }
+    const tokens = await generateTokens(
+      user._id as Types.ObjectId,
+      user.role,
+      this._jwtService,
+      this._loginRepository,
+    );
 
-    const tokens = await this.generateUserTokens(user._id as Types.ObjectId);
-    console.log(tokens);
-
-    res.cookie('usersAccessToken', tokens.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000,
-    });
+    setTokenCookies(res, tokens);
 
     return {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       userId: user._id.toString(),
       email: user.email,
-    };
-  }
-
-  /**
-   * Generates new access and refresh tokens for the user.
-   * @param userId - The user ID.
-   * @returns A Promise that resolves with the new tokens.
-   */
-  async generateUserTokens(
-    userId: Types.ObjectId,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
-    const accessToken = this._jwtService.sign({ userId });
-    const refreshToken = uuidv4();
-    await this._loginRepository.storeRefreshToken(refreshToken, userId);
-    return {
-      accessToken,
-      refreshToken,
+      role: user.role,
+      image: user.image,
     };
   }
 
@@ -84,12 +76,24 @@ export class AuthService implements IAuthService {
    */
   async refreshTokens(
     refreshToken: string,
+    res: Response,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const token = await this._loginRepository.findRefreshToken(refreshToken);
     if (!token) {
       throw new UnauthorizedException('Refresh Token is Invalid!');
     }
-    return this.generateUserTokens(token.userId);
+    const user = await this._loginRepository.findUserById(token.userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    const newTokens = await generateTokens(
+      user._id as Types.ObjectId,
+      user.role,
+      this._jwtService,
+      this._loginRepository,
+    );
+    setTokenCookies(res, newTokens);
+    return newTokens;
   }
 
   /**
@@ -97,13 +101,12 @@ export class AuthService implements IAuthService {
    * @param res - The response object to set cookies.
    * @returns A Promise that resolves with a success message.
    */
-  async userLogout(res: Response): Promise<{ message: string }> {
-    res.cookie('usersAccessToken', '', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      expires: new Date(0),
-    });
+  async logout(
+    res: Response,
+    refreshToken: string,
+  ): Promise<{ message: string }> {
+    await this._loginRepository.deleteRefreshToken(refreshToken);
+    clearTokenCookies(res);
     return { message: 'Logged out successfully' };
   }
 }
