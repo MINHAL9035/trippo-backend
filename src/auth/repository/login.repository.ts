@@ -4,9 +4,11 @@ import { Model, Types } from 'mongoose';
 import { User } from 'src/user/schema/user.schema';
 import { RefreshToken } from '../schema/refresh.token.schema';
 import { LoginDto } from '../dto/login.dto';
+import { ILoginRepository } from '../interface/ILoginRepository.interface';
+import { UserInterface } from 'src/user/interface/user/IUser.interface';
 
 @Injectable()
-export class LoginRepository {
+export class LoginRepository implements ILoginRepository {
   private readonly _logger = new Logger(LoginRepository.name);
   constructor(
     @InjectModel(User.name) private _userModel: Model<User>,
@@ -18,11 +20,16 @@ export class LoginRepository {
     const user = await this._userModel.findOne({
       email: userData.email,
     });
-    this._logger.log('dkjanfhkads', user);
     return user;
   }
-
   async findUserById(userId: Types.ObjectId): Promise<User | null> {
+    return this._userModel.findById(userId).exec();
+  }
+  async findUserByEmail(email: string): Promise<User | null> {
+    return this._userModel.findOne({ email: email }).exec();
+  }
+
+  async findJwtUserById(userId: string): Promise<User | null> {
     return this._userModel.findById(userId).exec();
   }
 
@@ -48,5 +55,10 @@ export class LoginRepository {
 
   async deleteRefreshToken(refreshToken: string): Promise<void> {
     await this._refreshTokenModel.deleteOne({ token: refreshToken }).exec();
+  }
+
+  async createGoogleUser(userData: UserInterface): Promise<UserInterface> {
+    const newUser = new this._userModel(userData);
+    return await newUser.save();
   }
 }

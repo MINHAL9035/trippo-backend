@@ -22,23 +22,14 @@ export class UserController {
    */
   @Post('register')
   async register(@Body() userDto: UserRegistrationDto) {
-    this._logger.log(`Registering new user: ${userDto.email}`);
-    try {
-      const user = await this._userService.register(userDto);
-      const { firstName, lastName, email } = user;
-      await this._otpService.sendOtp(email);
-      this._logger.log(`User registered and OTP sent: ${email}`);
-      return {
-        message: 'User registered and OTP sent',
-        user: { firstName, lastName, email },
-      };
-    } catch (error) {
-      this._logger.error(
-        `Error registering user: ${error.message}`,
-        error.stack,
-      );
-      throw error;
-    }
+    const user = await this._userService.register(userDto);
+    const { firstName, lastName, email } = user;
+    await this._otpService.sendOtp(email);
+    this._logger.log(`User registered and OTP sent: ${email}`);
+    return {
+      message: 'User registered and OTP sent',
+      user: { firstName, lastName, email },
+    };
   }
 
   /**
@@ -48,38 +39,26 @@ export class UserController {
    */
   @Post('verify-otp')
   async verifyOtp(@Body() verifyOtpDto: VerifyOtpDto) {
-    this._logger.log(`Verifying OTP for: ${verifyOtpDto.email}`);
-    try {
-      await this._otpService.verifyOtp(verifyOtpDto.email, verifyOtpDto.otp);
-      await this._userService.verifyUser(verifyOtpDto.email);
-      this._logger.log(`OTP verified successfully for: ${verifyOtpDto.email}`);
-      const user = await this._userRepository.findByEmail(verifyOtpDto.email);
-      const { firstName, lastName, email } = user;
-      return {
-        message: 'OTP verified successfully',
-        user: { firstName, lastName, email },
-      };
-    } catch (error) {
-      this._logger.error(`Error verifying OTP: ${error.message}`, error.stack);
-      throw error;
-    }
+    await this._otpService.verifyOtp(verifyOtpDto.email, verifyOtpDto.otp);
+    const user = await this._userService.verifyUser(verifyOtpDto.email);
+    const { firstName, lastName, email } = user;
+    return {
+      message: 'OTP verified successfully',
+      user: { firstName, lastName, email },
+    };
   }
 
   /**
    * Resends the OTP to the user's email.
    * @param email - The user's email address.
+   * @returns - A success message if OTP is resent successfully.
    */
   @Post('resend-otp')
   async resendOtp(@Body('email') email: string) {
     this._logger.log(`Resending OTP to: ${email}`);
-    try {
-      await this._otpService.sendOtp(email);
-      this._logger.log(`OTP resent successfully to: ${email}`);
-      return { message: 'OTP resent successfully' };
-    } catch (error) {
-      this._logger.error(`Error resending OTP: ${error.message}`, error.stack);
-      throw error;
-    }
+    await this._otpService.sendOtp(email);
+    this._logger.log(`OTP resent successfully to: ${email}`);
+    return { message: 'OTP resent successfully' };
   }
 
   @Get('getUserDetails')

@@ -13,7 +13,7 @@ export class User extends Document {
   @Prop({ required: true })
   email: string;
 
-  @Prop({ required: true })
+  @Prop({})
   password: string;
 
   @Prop({ default: 'https://github.com/shadcn.png' })

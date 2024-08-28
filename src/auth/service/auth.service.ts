@@ -5,19 +5,28 @@ import { JwtService } from '@nestjs/jwt';
 import { Types } from 'mongoose';
 import { Response } from 'express';
 import { LoginRepository } from '../repository/login.repository';
+import { ILogin } from '../interface/ILogin.interface';
 import {
   clearTokenCookies,
   generateTokens,
   setTokenCookies,
 } from '../utils/loginUtils';
+import { IAuthService } from '../interface/ILoginService.interface';
+import { OAuth2Client } from 'google-auth-library';
+import { GoogleAuthDto } from '../dto/googleAuth.dto';
+import fetchGoggleUserDetails from '../utils/fetchGoogleUserDetails';
+import { UserInterface } from 'src/user/interface/user/IUser.interface';
 
 @Injectable()
-export class AuthService {
+export class AuthService implements IAuthService {
   private readonly _logger = new Logger(AuthService.name);
+  private cleint: OAuth2Client;
   constructor(
     private readonly _loginRepository: LoginRepository,
     private readonly _jwtService: JwtService,
-  ) {}
+  ) {
+    this.cleint = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+  }
 
   /**
    * Logs in a regular user by validating their credentials and generating tokens.
@@ -25,20 +34,9 @@ export class AuthService {
    * @param res - The response object to set cookies.
    * @returns A Promise that resolves with user details and tokens.
    */
-  async loginUser(
-    LoginDto: LoginDto,
-    res: Response,
-  ): Promise<{
-    accessToken: string;
-    refreshToken: string;
-    userId: string;
-    email: string;
-    role: string;
-    image: string;
-  }> {
+  async loginUser(LoginDto: LoginDto, res: Response): Promise<ILogin> {
     const { password } = LoginDto;
     const user = await this._loginRepository.find(LoginDto);
-    this._logger.log('dfkgnkad', user);
     if (!user) {
       throw new Error('Invalid credentials');
     }
@@ -65,8 +63,53 @@ export class AuthService {
       userId: user._id.toString(),
       email: user.email,
       role: user.role,
-      image: user.image,
     };
+  }
+
+  async googleLogin(GoogleAuthDto: GoogleAuthDto, res: Response): Promise<any> {
+    try {
+      const userDetails = await fetchGoggleUserDetails(GoogleAuthDto);
+      console.log('sf', userDetails);
+
+      const existingUser = await this._loginRepository.findUserByEmail(
+        userDetails.email,
+      );
+
+      let user;
+      if (!existingUser) {
+        const newUser: UserInterface = {
+          firstName: userDetails.given_name,
+          lastName: userDetails.family_name,
+          email: userDetails.email,
+          verified: userDetails.verified_email,
+          is_blocked: false,
+          image: userDetails.picture,
+          role: 'user',
+        };
+        user = await this._loginRepository.createGoogleUser(newUser);
+      } else {
+        user = existingUser;
+      }
+
+      const tokens = await generateTokens(
+        user._id as Types.ObjectId,
+        user.role,
+        this._jwtService,
+        this._loginRepository,
+      );
+
+      setTokenCookies(res, tokens);
+
+      return {
+        email: user.email,
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        userId: user._id.toString(),
+      };
+    } catch (error) {
+      console.error(error);
+      throw new Error('An error occurred during Google login');
+    }
   }
 
   /**
@@ -105,8 +148,15 @@ export class AuthService {
     res: Response,
     refreshToken: string,
   ): Promise<{ message: string }> {
-    await this._loginRepository.deleteRefreshToken(refreshToken);
-    clearTokenCookies(res);
-    return { message: 'Logged out successfully' };
+    try {
+      this._logger.log(`Deleting refresh token: ${refreshToken}`);
+      await this._loginRepository.deleteRefreshToken(refreshToken);
+      clearTokenCookies(res);
+      this._logger.log('Cookies cleared successfully');
+      return { message: 'Logged out successfully' };
+    } catch (error) {
+      this._logger.error('Error during logout process', error.stack);
+      throw error;
+    }
   }
 }

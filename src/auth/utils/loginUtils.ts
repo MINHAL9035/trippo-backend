@@ -10,6 +10,8 @@ export async function generateTokens(
   jwtService: JwtService,
   loginRepository: LoginRepository,
 ): Promise<{ accessToken: string; refreshToken: string }> {
+  console.log('user', userId);
+
   const accessToken = jwtService.sign({ userId, role });
   const refreshToken = uuidv4();
   await loginRepository.storeRefreshToken(refreshToken, userId);
@@ -23,14 +25,14 @@ export function setTokenCookies(
   res: Response,
   tokens: { accessToken: string; refreshToken: string },
 ) {
-  res.cookie('accessToken', tokens.accessToken, {
+  res.cookie('userAccessToken', tokens.accessToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
-    maxAge: 60 * 1000,
+    maxAge: 24 * 60 * 60 * 1000,
   });
 
-  res.cookie('refreshToken', tokens.refreshToken, {
+  res.cookie('userRefreshToken', tokens.refreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
@@ -39,14 +41,14 @@ export function setTokenCookies(
 }
 
 export function clearTokenCookies(res: Response) {
-  res.cookie('accessToken', '', {
+  res.cookie('userAccessToken', '', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
     expires: new Date(0),
   });
 
-  res.cookie('refreshToken', '', {
+  res.cookie('userRefreshToken', '', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',

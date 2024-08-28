@@ -3,7 +3,7 @@ export interface UserInterface {
   firstName: string;
   lastName: string;
   email: string;
-  password: string;
+  password?: string;
   verified?: boolean;
   is_blocked?: boolean;
   image?: string;

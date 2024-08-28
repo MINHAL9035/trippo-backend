@@ -8,7 +8,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { RefreshTokenSchema } from './schema/refresh.token.schema';
 import { LoginRepository } from './repository/login.repository';
 import googleOauthConfig from './config/google-oauth.config';
-import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
   imports: [
@@ -31,7 +30,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     ConfigModule.forFeature(googleOauthConfig),
   ],
   controllers: [AuthController],
-  providers: [AuthService, LoginRepository, JwtStrategy],
+  providers: [AuthService, LoginRepository],
   exports: [MongooseModule],
 })
 export class AuthModule {}
