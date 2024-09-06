@@ -6,6 +6,7 @@ export interface UserInterface {
   password?: string;
   verified?: boolean;
   is_blocked?: boolean;
+  isGoogle: boolean;
   image?: string;
   role: string;
 }

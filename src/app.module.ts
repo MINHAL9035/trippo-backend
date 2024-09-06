@@ -2,17 +2,29 @@ import { Logger, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserModule } from './user/user.module';
-import { MailerModule } from '@nestjs-modules/mailer';
 import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
 import { WinstonModule } from 'nest-winston';
 import { winstonConfig } from './common/config/logger.config';
 import { TripModule } from './trip/trip.module';
+import { JwtModule } from '@nestjs/jwt';
+import { MailerModule } from '@nestjs-modules/mailer';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async (ConfigService: ConfigService) => ({
+        global: true,
+        secret: ConfigService.get<string>('JWT_SECRET'),
+        signOptions: {
+          expiresIn: ConfigService.get<string>('JWT_EXPIRATION'),
+        },
+      }),
+      inject: [ConfigService],
     }),
 
     // logger

@@ -1,9 +1,18 @@
-import { Body, Controller, Get, Logger, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Logger,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { UserService } from '../service/user.service';
 import { UserRegistrationDto } from '../dto/user.registration.dto';
 import { OtpService } from '../service/otp.service';
 import { VerifyOtpDto } from '../dto/verifyOtp.dto';
 import { UserRepository } from '../repository/user.repository';
+import { JwtUserGuard } from 'src/guards/jwtUserAuth.guard';
 
 @Controller('users')
 export class UserController {
@@ -53,6 +62,7 @@ export class UserController {
    * @param email - The user's email address.
    * @returns - A success message if OTP is resent successfully.
    */
+
   @Post('resend-otp')
   async resendOtp(@Body('email') email: string) {
     this._logger.log(`Resending OTP to: ${email}`);
@@ -61,6 +71,7 @@ export class UserController {
     return { message: 'OTP resent successfully' };
   }
 
+  @UseGuards(JwtUserGuard)
   @Get('getUserDetails')
   async getUserDetails(@Query('email') email: string) {
     return this._userService.getUserDetails(email);

@@ -16,7 +16,7 @@ export class LoginRepository implements ILoginRepository {
     private _refreshTokenModel: Model<RefreshToken>,
   ) {}
 
-  async find(userData: LoginDto): Promise<User | null> {
+  async findUser(userData: LoginDto): Promise<User | null> {
     const user = await this._userModel.findOne({
       email: userData.email,
     });
@@ -26,11 +26,13 @@ export class LoginRepository implements ILoginRepository {
     return this._userModel.findById(userId).exec();
   }
   async findUserByEmail(email: string): Promise<User | null> {
+    this._logger.log('my repo forgot', email);
     return this._userModel.findOne({ email: email }).exec();
   }
 
-  async findJwtUserById(userId: string): Promise<User | null> {
-    return this._userModel.findById(userId).exec();
+  async findJwtUserById(userId: Types.ObjectId): Promise<User | null> {
+    const response = await this._userModel.findById(userId).exec();
+    return response;
   }
 
   async storeRefreshToken(token: string, userId: Types.ObjectId) {

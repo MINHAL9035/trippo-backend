@@ -8,6 +8,8 @@ import { unverifiedUserSchema } from './schema/UnverifiedUser.schema';
 import { OtpSchema } from './schema/Otp.schema';
 import { OtpService } from './service/otp.service';
 import { OtpRepository } from './repository/Otp.repository';
+import { LoginRepository } from 'src/auth/repository/login.repository';
+import { RefreshTokenSchema } from 'src/auth/schema/refresh.token.schema';
 
 @Module({
   imports: [
@@ -15,10 +17,17 @@ import { OtpRepository } from './repository/Otp.repository';
       { name: 'User', schema: UserSchema },
       { name: 'UnverifiedUser', schema: unverifiedUserSchema },
       { name: 'Otp', schema: OtpSchema },
+      { name: 'RefreshToken', schema: RefreshTokenSchema },
     ]),
   ],
   controllers: [UserController],
-  providers: [UserService, UserRepository, OtpService, OtpRepository],
+  providers: [
+    UserService,
+    UserRepository,
+    OtpService,
+    OtpRepository,
+    LoginRepository,
+  ],
   exports: [UserService, UserRepository, MongooseModule],
 })
 export class UserModule {}

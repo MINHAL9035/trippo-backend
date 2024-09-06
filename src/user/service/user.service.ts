@@ -88,6 +88,7 @@ export class UserService implements IUserService {
         email: unverifiedUser.email,
         password: unverifiedUser.password,
         verified: true,
+        isGoogle: false,
         role: unverifiedUser.role,
       };
 

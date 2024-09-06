@@ -28,16 +28,23 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: Response,
   ) {
+    this._logger.log('loginDto', loginDto);
     const result = await this._authService.loginUser(loginDto, res);
     return result;
   }
 
-  @Post('/google-login')
+  /**
+   * Handles Google login
+   * @param GoogleAuthDto - Data Transfer Object for Google authentication
+   * @param res - HTTP response object
+   * @returns - The response from the Google login service
+   */
+  @Post('google-login')
   async googleLogin(
     @Body() GoogleAuthDto: GoogleAuthDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<any> {
-    const response = this._authService.googleLogin(GoogleAuthDto, res);
+    const response = await this._authService.googleLogin(GoogleAuthDto, res);
     return response;
   }
 

@@ -20,7 +20,7 @@ export class AdminService {
   constructor(
     private readonly _adminRepository: AdminLoginRepository,
     private readonly _jwtService: JwtService,
-    private readonly configService: ConfigService,
+    private readonly _configService: ConfigService,
     @InjectModel(User.name) private userModel: Model<User>,
   ) {}
 
@@ -55,18 +55,13 @@ export class AdminService {
     if (user.role !== 'admin') {
       throw new UnauthorizedException('Access denied: Admins only');
     }
-
-    console.log('fdfd0');
-
     const tokens = await generateAdminTokens(
       user._id as Types.ObjectId,
       user.role,
       this._jwtService,
       this._adminRepository,
-      this.configService,
+      this._configService,
     );
-    console.log('effdf');
-
     setAdminTokenCookies(res, tokens);
 
     return {
@@ -84,18 +79,18 @@ export class AdminService {
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const token = await this._adminRepository.findRefreshToken(refreshToken);
     if (!token) {
-      throw new UnauthorizedException('Refresh Token is Invalid!');
+      throw new UnauthorizedException('Admin Refresh Token is Invalid!');
     }
     const user = await this._adminRepository.findUserById(token.userId);
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException('admin not found');
     }
     const newTokens = await generateAdminTokens(
       user._id as Types.ObjectId,
       user.role,
       this._jwtService,
       this._adminRepository,
-      this.configService,
+      this._configService,
     );
     setAdminTokenCookies(res, newTokens);
     return newTokens;
@@ -106,23 +101,14 @@ export class AdminService {
     return { message: 'Logged out successfully' };
   }
 
-  async getAllUsers(
-    page: number,
-    usersPerPage: number,
-  ): Promise<{ users: User[]; totalPages: number }> {
-    const skip = (page - 1) * usersPerPage;
-    const totalUsers = await this.userModel.countDocuments();
+  async getAllUsers(): Promise<{ users: User[] }> {
     const users = await this.userModel
-      .find()
+      .find({ role: 'user' })
       .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(usersPerPage)
       .exec();
-    const totalPages = Math.ceil(totalUsers / usersPerPage);
 
     return {
       users,
-      totalPages,
     };
   }
 

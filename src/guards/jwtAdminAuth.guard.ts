@@ -1,7 +1,5 @@
 import {
   ExecutionContext,
-  HttpException,
-  HttpStatus,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -11,35 +9,29 @@ import { LoginRepository } from '../auth/repository/login.repository';
 import { Types } from 'mongoose';
 
 @Injectable()
-export class JwtUserGuard extends AuthGuard('userAccessToken') {
+export class JwtAdminGuard extends AuthGuard('adminAccessToken') {
   constructor(private readonly _loginRepository: LoginRepository) {
     super();
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const token = request.cookies ? request.cookies.userAccessToken : null;
-
+    const token = request.cookies ? request.cookies.adminAccessToken : null;
     if (!token) {
-      throw new UnauthorizedException('User Token Not Found');
+      throw new UnauthorizedException('Admin Token Not Found');
     }
 
     try {
+      const decoded = jwt.decode(token) as { userId: string; role: string };
       const secretKey = process.env.JWT_SECRET;
-      const decoded = jwt.verify(token, secretKey) as {
-        userId: string;
-        role: string;
-      };
+      // Now verify the token (this will check the expiration and signature)
+      jwt.verify(token, secretKey);
+      console.log('my admin verified token', decoded);
 
       const userId = new Types.ObjectId(decoded.userId);
       const user = await this._loginRepository.findJwtUserById(userId);
-
       if (!user) {
         throw new UnauthorizedException('User not found');
-      }
-
-      if (user && user.is_blocked) {
-        throw new HttpException('User is blocked', HttpStatus.FORBIDDEN);
       }
 
       if (user.role !== decoded.role) {
@@ -49,13 +41,13 @@ export class JwtUserGuard extends AuthGuard('userAccessToken') {
       request.user = user;
       return true;
     } catch (error) {
-      console.error('JWT Verification Error:', error);
+      console.error('JWT Verification Error in admin:', error);
       if (error instanceof jwt.TokenExpiredError) {
-        throw new UnauthorizedException('User Token expired');
+        throw new UnauthorizedException('Admin Token expired');
       } else if (error instanceof jwt.JsonWebTokenError) {
-        throw new UnauthorizedException('Invalid token');
+        throw new UnauthorizedException('Invalid admin token');
       } else {
-        throw new UnauthorizedException('Authentication error');
+        throw new UnauthorizedException('Authentication error in admion jwt');
       }
     }
   }

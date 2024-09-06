@@ -8,6 +8,12 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { RefreshTokenSchema } from './schema/refresh.token.schema';
 import { LoginRepository } from './repository/login.repository';
 import googleOauthConfig from './config/google-oauth.config';
+import { User, UserSchema } from 'src/user/schema/user.schema';
+import { ForgotController } from './controller/forgotPassword.controller';
+import { ForgotService } from './service/forgot.service';
+import { ForgotRepository } from './repository/forgotPassword.repository';
+import { OtpService } from 'src/user/service/otp.service';
+import { OtpRepository } from 'src/user/repository/Otp.repository';
 
 @Module({
   imports: [
@@ -23,14 +29,21 @@ import googleOauthConfig from './config/google-oauth.config';
       }),
       inject: [ConfigService],
     }),
-
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     MongooseModule.forFeature([
       { name: 'RefreshToken', schema: RefreshTokenSchema },
     ]),
     ConfigModule.forFeature(googleOauthConfig),
   ],
-  controllers: [AuthController],
-  providers: [AuthService, LoginRepository],
-  exports: [MongooseModule],
+  controllers: [AuthController, ForgotController],
+  providers: [
+    AuthService,
+    LoginRepository,
+    ForgotService,
+    ForgotRepository,
+    OtpService,
+    OtpRepository,
+  ],
+  exports: [MongooseModule, LoginRepository],
 })
 export class AuthModule {}

@@ -25,6 +25,9 @@ export class User extends Document {
   @Prop({ default: false })
   is_blocked: boolean;
 
+  @Prop({ default: false })
+  isGoogle: boolean;
+
   @Prop({ required: true, enum: ['user', 'admin'], default: 'user' })
   role: string;
 }

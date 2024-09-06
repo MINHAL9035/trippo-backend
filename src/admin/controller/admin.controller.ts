@@ -5,9 +5,9 @@ import {
   Logger,
   Patch,
   Post,
-  Query,
   Req,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { AdminLoginRepository } from '../respository/admin.repository';
 import { LoginDto } from 'src/auth/dto/login.dto';
@@ -15,6 +15,7 @@ import { AdminService } from '../service/admin.service';
 import { Response, Request } from 'express';
 import { UpdateUserStatusDto } from '../dto/updateUserStatus.dto';
 import { UserInterface } from 'src/user/interface/user/IUser.interface';
+import { JwtAdminGuard } from 'src/guards/jwtAdminAuth.guard';
 
 @Controller('admin')
 export class AdminController {
@@ -44,12 +45,10 @@ export class AdminController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    this._logger.log('Attempting to refresh token');
     try {
       const refreshToken = req.cookies['adminRefreshToken'];
-      if (!refreshToken) {
-        throw new Error('Refresh token not found in cookie');
-      }
+      console.log('refreshToken', refreshToken);
+
       const result = await this._adminService.AdminRefreshTokens(
         refreshToken,
         res,
@@ -62,6 +61,7 @@ export class AdminController {
     }
   }
 
+  @UseGuards(JwtAdminGuard)
   @Post('logout')
   async userLogout(@Res({ passthrough: true }) res: Response) {
     try {
@@ -73,20 +73,18 @@ export class AdminController {
     }
   }
 
+  @UseGuards(JwtAdminGuard)
   @Get('users')
-  async getUsers(
-    @Query('page') page: number = 1,
-  ): Promise<{ users: UserInterface[]; totalPages: number }> {
-    this._logger.log('Received request for users');
+  async getUsers(): Promise<{ users: UserInterface[] }> {
     try {
-      const usersPerPage = 5;
-      return this._adminService.getAllUsers(page, usersPerPage);
+      return this._adminService.getAllUsers();
     } catch (error) {
       this._logger.error('Error during login', error.stack);
       throw error;
     }
   }
 
+  @UseGuards(JwtAdminGuard)
   @Patch('update-status')
   async updateStatus(@Body() updateUserStatusDto: UpdateUserStatusDto) {
     return this._adminService.updateStatus(updateUserStatusDto);

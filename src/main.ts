@@ -5,17 +5,11 @@ import * as cookieParser from 'cookie-parser';
 import { AllExceptionsFilter } from './filters/http-exception.filter';
 import { WinstonModule } from 'nest-winston';
 import { winstonConfig } from './common/config/logger.config';
-import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: WinstonModule.createLogger(winstonConfig),
   });
-  const configService = app.get(ConfigService);
-
-  console.log('JWT_SECRET:', configService.get<string>('JWT_SECRET'));
-  console.log('JWT_EXPIRATION:', configService.get<string>('JWT_EXPIRATION'));
-
   app.enableCors({
     origin: process.env.FRONTEND_URL,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],

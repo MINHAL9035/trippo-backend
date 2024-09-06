@@ -10,8 +10,6 @@ export async function generateTokens(
   jwtService: JwtService,
   loginRepository: LoginRepository,
 ): Promise<{ accessToken: string; refreshToken: string }> {
-  console.log('user', userId);
-
   const accessToken = jwtService.sign({ userId, role });
   const refreshToken = uuidv4();
   await loginRepository.storeRefreshToken(refreshToken, userId);
