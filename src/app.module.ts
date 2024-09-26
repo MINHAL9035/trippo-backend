@@ -7,7 +7,6 @@ import { AdminModule } from './admin/admin.module';
 import { WinstonModule } from 'nest-winston';
 import { winstonConfig } from './common/config/logger.config';
 import { TripModule } from './trip/trip.module';
-import { JwtModule } from '@nestjs/jwt';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { AwsModule } from './aws/aws.module';
 import { HotelOwnerModule } from './hotel-owner/hotel-owner.module';
@@ -17,17 +16,6 @@ import { StripeModule } from './stripe/stripe.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-    }),
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      useFactory: async (ConfigService: ConfigService) => ({
-        global: true,
-        secret: ConfigService.get<string>('JWT_SECRET'),
-        signOptions: {
-          expiresIn: ConfigService.get<string>('JWT_EXPIRATION'),
-        },
-      }),
-      inject: [ConfigService],
     }),
 
     // logger
