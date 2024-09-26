@@ -5,3 +5,9 @@ export interface ILogin {
   refreshToken: string;
   role: string;
 }
+export interface IOwnerLogin {
+  ownerId: string;
+  email: string;
+  accessToken: string;
+  refreshToken: string;
+}

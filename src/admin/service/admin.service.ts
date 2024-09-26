@@ -21,7 +21,7 @@ export class AdminService {
     private readonly _adminRepository: AdminLoginRepository,
     private readonly _jwtService: JwtService,
     private readonly _configService: ConfigService,
-    @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(User.name) private _userModel: Model<User>,
   ) {}
 
   /**
@@ -102,7 +102,7 @@ export class AdminService {
   }
 
   async getAllUsers(): Promise<{ users: User[] }> {
-    const users = await this.userModel
+    const users = await this._userModel
       .find({ role: 'user' })
       .sort({ createdAt: -1 })
       .exec();
@@ -116,7 +116,7 @@ export class AdminService {
     const { userIds, action } = updateUserStatusDto;
     const isBlocked = action === 'block';
 
-    const result = await this.userModel.updateMany(
+    const result = await this._userModel.updateMany(
       { _id: { $in: userIds } },
       { $set: { is_blocked: isBlocked } },
     );

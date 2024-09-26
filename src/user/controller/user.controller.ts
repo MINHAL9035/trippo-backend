@@ -3,16 +3,16 @@ import {
   Controller,
   Get,
   Logger,
+  Param,
   Post,
   Query,
-  UseGuards,
 } from '@nestjs/common';
 import { UserService } from '../service/user.service';
 import { UserRegistrationDto } from '../dto/user.registration.dto';
 import { OtpService } from '../service/otp.service';
 import { VerifyOtpDto } from '../dto/verifyOtp.dto';
-import { UserRepository } from '../repository/user.repository';
-import { JwtUserGuard } from 'src/guards/jwtUserAuth.guard';
+import { Types } from 'mongoose';
+import { PendingBookingDto } from '../dto/pendingBooking.dto';
 
 @Controller('users')
 export class UserController {
@@ -21,7 +21,6 @@ export class UserController {
   constructor(
     private readonly _userService: UserService,
     private readonly _otpService: OtpService,
-    private readonly _userRepository: UserRepository,
   ) {}
 
   /**
@@ -62,7 +61,6 @@ export class UserController {
    * @param email - The user's email address.
    * @returns - A success message if OTP is resent successfully.
    */
-
   @Post('resend-otp')
   async resendOtp(@Body('email') email: string) {
     this._logger.log(`Resending OTP to: ${email}`);
@@ -71,9 +69,28 @@ export class UserController {
     return { message: 'OTP resent successfully' };
   }
 
-  @UseGuards(JwtUserGuard)
-  @Get('getUserDetails')
-  async getUserDetails(@Query('email') email: string) {
-    return this._userService.getUserDetails(email);
+  @Post('searchResults')
+  async searchHotels(@Body() searchData: any) {
+    return this._userService.searchHotels(searchData);
+  }
+
+  @Get('getHotelDetails/:id')
+  async getSingleHotelDetails(@Param('id') id: string) {
+    const hotelId = new Types.ObjectId(id);
+    return this._userService.getSingleHotelDetails(hotelId);
+  }
+
+  @Post('pendingBookings')
+  async pendingBookings(@Body() PendingBookingDto: PendingBookingDto) {
+    console.log('dfd', PendingBookingDto);
+
+    const pendingBooking =
+      await this._userService.createPendingBooking(PendingBookingDto);
+    return pendingBooking;
+  }
+
+  @Get('getBookingDetails')
+  async getBookingDetails(@Query('bookingId') bookingId: string) {
+    return await this._userService.getBookingDetails(bookingId);
   }
 }

@@ -10,6 +10,8 @@ import { UserRegistrationDto } from '../dto/user.registration.dto';
 import { UnverifiedUserInterface } from '../interface/user/IUnverifiedUser.interface';
 import { UserInterface } from '../interface/user/IUser.interface';
 import { IUserService } from '../interface/user/IUserService.interface';
+import { Types } from 'mongoose';
+import { PendingBookingDto } from '../dto/pendingBooking.dto';
 
 @Injectable()
 export class UserService implements IUserService {
@@ -126,6 +128,53 @@ export class UserService implements IUserService {
         error.stack,
       );
       throw error;
+    }
+  }
+
+  async searchHotels(searchData: any) {
+    try {
+      const { destination } = searchData;
+      console.log('my destination', destination);
+
+      const hotels = await this._userRepository.findHotels(destination);
+      console.log('my hotels', hotels);
+
+      return hotels;
+    } catch (error) {
+      this._logger.error(error);
+      throw new error();
+    }
+  }
+
+  async getSingleHotelDetails(hotelId: Types.ObjectId) {
+    try {
+      const hotelDetails = await this._userRepository.findHotelById(hotelId);
+      return hotelDetails;
+    } catch (error) {
+      this._logger.error(error);
+      throw new error();
+    }
+  }
+
+  async createPendingBooking(PendingBookingDto: PendingBookingDto) {
+    try {
+      const pendingBooking =
+        await this._userRepository.createPendingBooking(PendingBookingDto);
+      return pendingBooking;
+    } catch (error) {
+      this._logger.error(error);
+      throw new error();
+    }
+  }
+
+  async getBookingDetails(bookingId: string) {
+    try {
+      const bookingDetails =
+        await this._userRepository.findBookingDetails(bookingId);
+      return bookingDetails;
+    } catch (error) {
+      this._logger.error(error);
+      throw new error();
     }
   }
 }

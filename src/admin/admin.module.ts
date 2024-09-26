@@ -8,6 +8,12 @@ import { AdminLoginRepository } from './respository/admin.repository';
 import { AuthModule } from 'src/auth/auth.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AdminRefreshTokenSchema } from './schema/adminRefreshToken.schema';
+import { AdminHotelController } from './controller/adminHotel.controller';
+import { AdminHotelService } from './service/adminHotel.service';
+import { ownerRequestSchema } from 'src/hotel-owner/schema/PendingRequest.schema';
+import { AdminHotelRepository } from './respository/adminHotel.repository';
+import { OwnerSchema } from 'src/hotel-owner/schema/owner.schema';
+import { unverifiedOwnerSchema } from 'src/hotel-owner/schema/UnverifiedOwnerSchema';
 
 @Module({
   imports: [
@@ -15,6 +21,9 @@ import { AdminRefreshTokenSchema } from './schema/adminRefreshToken.schema';
     AuthModule,
     MongooseModule.forFeature([
       { name: 'AdminRefreshToken', schema: AdminRefreshTokenSchema },
+      { name: 'Owner', schema: OwnerSchema },
+      { name: 'OwnerRequest', schema: ownerRequestSchema },
+      { name: 'UnverifiedOwner', schema: unverifiedOwnerSchema },
     ]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -28,7 +37,13 @@ import { AdminRefreshTokenSchema } from './schema/adminRefreshToken.schema';
       inject: [ConfigService],
     }),
   ],
-  controllers: [AdminController],
-  providers: [AdminService, AdminLoginRepository, JwtService],
+  controllers: [AdminController, AdminHotelController],
+  providers: [
+    AdminService,
+    AdminLoginRepository,
+    JwtService,
+    AdminHotelService,
+    AdminHotelRepository,
+  ],
 })
 export class AdminModule {}
