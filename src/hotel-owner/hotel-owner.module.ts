@@ -16,6 +16,9 @@ import { OwnerSchema } from './schema/owner.schema';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { OwnerRefreshTokenSchema } from './schema/ownerRefreshToken.schema';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { UnverifiedHotelSchema } from './schema/UnverifiedHotel';
+import { S3Service } from 'src/aws/aws.service';
+import { CompletedBookingSchema } from 'src/user/schema/completedBookings.schema';
 
 @Module({
   imports: [
@@ -34,9 +37,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       { name: 'Otp', schema: OtpSchema },
       { name: 'UnverifiedOwner', schema: unverifiedOwnerSchema },
       { name: 'Hotel', schema: HotelSchema },
+      { name: 'UnverifiedHotel', schema: UnverifiedHotelSchema },
       { name: 'OwnerRequest', schema: ownerRequestSchema },
       { name: 'Owner', schema: OwnerSchema },
       { name: 'OwnerRefreshToken', schema: OwnerRefreshTokenSchema },
+      { name: 'CompletedBooking', schema: CompletedBookingSchema },
     ]),
   ],
   controllers: [OwnerController, HotelController],
@@ -48,6 +53,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     HotelService,
     HotelRepository,
     JwtService,
+    S3Service,
   ],
 })
 export class HotelOwnerModule {}

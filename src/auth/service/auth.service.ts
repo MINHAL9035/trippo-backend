@@ -34,6 +34,8 @@ export class AuthService implements IAuthService {
     try {
       const { password } = LoginDto;
       const user = await this._loginRepository.findUser(LoginDto);
+      console.log('my user', user);
+
       if (!user) {
         throw new UnauthorizedException('You are not a user, please sign up');
       }
@@ -60,6 +62,7 @@ export class AuthService implements IAuthService {
         userId: user._id.toString(),
         email: user.email,
         role: user.role,
+        userName: user.userName,
       };
     } catch (error) {
       this._logger.error('Error in loginUser method', error);
@@ -86,8 +89,8 @@ export class AuthService implements IAuthService {
       let user;
       if (!existingUser) {
         const newUser: UserInterface = {
-          firstName: userDetails.given_name,
-          lastName: userDetails.family_name,
+          fullName: userDetails.given_name,
+          userName: userDetails.family_name,
           email: userDetails.email,
           verified: userDetails.verified_email,
           is_blocked: false,
@@ -98,6 +101,10 @@ export class AuthService implements IAuthService {
         user = await this._loginRepository.createGoogleUser(newUser);
       } else {
         user = existingUser;
+
+        if (user.is_blocked) {
+          throw new UnauthorizedException('User is blocked');
+        }
       }
 
       const tokens = await generateTokens(
@@ -111,14 +118,15 @@ export class AuthService implements IAuthService {
 
       return {
         email: user.email,
+        userName: user.userName,
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
         userId: user._id.toString(),
         role: user.role,
       };
     } catch (error) {
-      console.error(error);
-      throw new Error('An error occurred during Google login');
+      this._logger.error('Error in loginUser method', error);
+      throw error;
     }
   }
 

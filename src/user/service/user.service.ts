@@ -1,7 +1,6 @@
 import {
   ConflictException,
   Injectable,
-  InternalServerErrorException,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
@@ -36,6 +35,12 @@ export class UserService implements IUserService {
         throw new ConflictException('A user with this email already exists');
       }
 
+      const existingVerifiedUserByUsername =
+        await this._userRepository.findByUsername(userDto.userName);
+      if (existingVerifiedUserByUsername) {
+        throw new ConflictException('Username already taken');
+      }
+
       const existingUnverifiedUser =
         await this._userRepository.findUnverifiedUser(userDto.email);
       if (existingUnverifiedUser) {
@@ -53,11 +58,8 @@ export class UserService implements IUserService {
       this._logger.log(`User registered: ${userDto.email}`);
       return createdUser;
     } catch (error) {
-      this._logger.error(
-        `Failed to register user: ${userDto.email}: ${error.message}`,
-        error.stack,
-      );
-      throw new InternalServerErrorException('Failed to register user');
+      this._logger.error(error);
+      throw error;
     }
   }
 
@@ -85,8 +87,8 @@ export class UserService implements IUserService {
       }
 
       const verifiedUser: UserInterface = {
-        firstName: unverifiedUser.firstName,
-        lastName: unverifiedUser.lastName,
+        fullName: unverifiedUser.fullName,
+        userName: unverifiedUser.userName,
         email: unverifiedUser.email,
         password: unverifiedUser.password,
         verified: true,
@@ -100,11 +102,8 @@ export class UserService implements IUserService {
       this._logger.log(`User verified: ${email}`);
       return verifiedUser;
     } catch (error) {
-      this._logger.error(
-        `Failed to verify user: ${email}: ${error.message}`,
-        error.stack,
-      );
-      throw new InternalServerErrorException('Failed to verify user');
+      this._logger.error(error);
+      throw error;
     }
   }
 
@@ -123,22 +122,14 @@ export class UserService implements IUserService {
       }
       return user;
     } catch (error) {
-      this._logger.error(
-        `Failed to find user: ${email}: ${error.message}`,
-        error.stack,
-      );
+      this._logger.error(error);
       throw error;
     }
   }
 
   async searchHotels(searchData: any) {
     try {
-      const { destination } = searchData;
-      console.log('my destination', destination);
-
-      const hotels = await this._userRepository.findHotels(destination);
-      console.log('my hotels', hotels);
-
+      const hotels = await this._userRepository.findHotels(searchData);
       return hotels;
     } catch (error) {
       this._logger.error(error);
@@ -175,6 +166,27 @@ export class UserService implements IUserService {
     } catch (error) {
       this._logger.error(error);
       throw new error();
+    }
+  }
+  async getCompletedBooking(bookingId: string) {
+    try {
+      const completedBooking =
+        await this._userRepository.findCompletedBooking(bookingId);
+      console.log('completed', completedBooking);
+
+      return completedBooking;
+    } catch (error) {
+      this._logger.error(error);
+      throw new error();
+    }
+  }
+  async getuserBookings(userId: Types.ObjectId) {
+    try {
+      const userBookings = await this._userRepository.findUserBookings(userId);
+      return userBookings;
+    } catch (error) {
+      console.error('Service error:', error);
+      throw error;
     }
   }
 }

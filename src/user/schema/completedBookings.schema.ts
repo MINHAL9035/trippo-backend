@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
 @Schema({ timestamps: true })
-export class PendingBooking extends Document {
+export class CompletedBooking extends Document {
   @Prop()
   bookingId: string;
 
@@ -25,5 +25,5 @@ export class PendingBooking extends Document {
   status: string;
 }
 
-export const PendingBookingSchema =
-  SchemaFactory.createForClass(PendingBooking);
+export const CompletedBookingSchema =
+  SchemaFactory.createForClass(CompletedBooking);

@@ -14,6 +14,8 @@ import { ownerRequestSchema } from 'src/hotel-owner/schema/PendingRequest.schema
 import { AdminHotelRepository } from './respository/adminHotel.repository';
 import { OwnerSchema } from 'src/hotel-owner/schema/owner.schema';
 import { unverifiedOwnerSchema } from 'src/hotel-owner/schema/UnverifiedOwnerSchema';
+import { UnverifiedHotelSchema } from 'src/hotel-owner/schema/UnverifiedHotel';
+import { HotelSchema } from 'src/hotel-owner/schema/HotelSchema';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { unverifiedOwnerSchema } from 'src/hotel-owner/schema/UnverifiedOwnerSch
       { name: 'Owner', schema: OwnerSchema },
       { name: 'OwnerRequest', schema: ownerRequestSchema },
       { name: 'UnverifiedOwner', schema: unverifiedOwnerSchema },
+      { name: 'UnverifiedHotel', schema: UnverifiedHotelSchema },
+      { name: 'Hotel', schema: HotelSchema },
     ]),
     JwtModule.registerAsync({
       imports: [ConfigModule],

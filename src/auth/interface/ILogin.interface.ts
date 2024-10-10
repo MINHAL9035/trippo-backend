@@ -1,5 +1,6 @@
 export interface ILogin {
   userId: string;
+  userName: string;
   email: string;
   accessToken: string;
   refreshToken: string;

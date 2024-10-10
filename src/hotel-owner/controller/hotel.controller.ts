@@ -1,13 +1,34 @@
-import { Body, Controller, Get, Patch, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Logger,
+  Patch,
+  Post,
+  Query,
+  UploadedFiles,
+  UseInterceptors,
+} from '@nestjs/common';
 import { CreateHotelDto } from '../dto/createHotel.dto';
 import { HotelService } from '../service/hotel.service';
-import { Types } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { UpdateHotelDto } from '../dto/updateHotel.dto';
 import { SubmitDetailsDto } from '../dto/submitDetails.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Hotel } from '../schema/HotelSchema';
+import { EditHotelDto } from '../dto/editHotel.dto';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { S3Service } from 'src/aws/aws.service';
 
 @Controller('hotelOwner')
 export class HotelController {
-  constructor(private readonly _hotelService: HotelService) {}
+  private readonly _logger = new Logger(HotelController.name);
+  constructor(
+    private readonly _hotelService: HotelService,
+    @InjectModel(Hotel.name)
+    private readonly _hotelModel: Model<Hotel>,
+    private readonly _s3Service: S3Service,
+  ) {}
   @Post('createHotel')
   async createHotel(@Body() createHotelDto: CreateHotelDto) {
     const response = await this._hotelService.createHotel(createHotelDto);
@@ -39,5 +60,46 @@ export class HotelController {
     const submitDetails =
       await this._hotelService.submitDetails(SubmitDetailsDto);
     return submitDetails;
+  }
+
+  @Get('hotelDetails')
+  async fetchHotelDetails(@Query('hotelId') hotelId: string) {
+    const newHotelId = new Types.ObjectId(hotelId);
+    return (await this._hotelModel.findOne({ _id: newHotelId })).populate(
+      'ownerId',
+    );
+  }
+  @Patch('editHotel')
+  async editHotel(
+    @Body() editHotelDto: EditHotelDto,
+    @Query('hotelId') hotelId: string,
+  ) {
+    const newHotelId = new Types.ObjectId(hotelId);
+    return await this._hotelService.editHotel(editHotelDto, newHotelId);
+  }
+
+  @Patch('editHotelInfo')
+  @UseInterceptors(FilesInterceptor('hotelImages'))
+  async editHotelInfo(
+    @Body() editHotelDto: EditHotelDto,
+    @Query('hotelId') hotelId: string,
+    @UploadedFiles() hotelImages: Array<Express.Multer.File>,
+  ) {
+    const newHotelId = new Types.ObjectId(hotelId);
+    const uploadedImages = await Promise.all(
+      hotelImages.map((image) => this._s3Service.uploadFile(image)),
+    );
+    const imageLocations = uploadedImages.map((image) => image.Location);
+    const updatedHotelData = {
+      ...editHotelDto,
+      images: imageLocations,
+    };
+    return this._hotelService.editHotelInfo(newHotelId, updatedHotelData);
+  }
+
+  @Get('hotelDetails')
+  async getFullHotelDetails(@Query('hotelId') hotelId: string) {
+    const newHotelId = new Types.ObjectId(hotelId);
+    return this._hotelService.getFullDetails(newHotelId);
   }
 }

@@ -5,12 +5,6 @@ export class CreateHotelDto {
   hotelName: string;
 
   @IsString()
-  roomType: string;
-
-  @IsString()
-  numberOfRooms: string;
-
-  @IsString()
   streetAddress: string;
 
   @IsString()
@@ -21,9 +15,6 @@ export class CreateHotelDto {
 
   @IsString()
   country: string;
-
-  @IsString()
-  price: string;
 
   @IsString()
   @IsNotEmpty()

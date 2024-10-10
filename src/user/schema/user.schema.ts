@@ -5,10 +5,10 @@ import * as bcrypt from 'bcrypt';
 @Schema({ timestamps: true })
 export class User extends Document {
   @Prop({ required: true })
-  firstName: string;
+  fullName: string;
 
   @Prop({ required: true })
-  lastName: string;
+  userName: string;
 
   @Prop({ required: true })
   email: string;

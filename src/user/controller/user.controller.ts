@@ -6,6 +6,8 @@ import {
   Param,
   Post,
   Query,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from '../service/user.service';
 import { UserRegistrationDto } from '../dto/user.registration.dto';
@@ -13,6 +15,7 @@ import { OtpService } from '../service/otp.service';
 import { VerifyOtpDto } from '../dto/verifyOtp.dto';
 import { Types } from 'mongoose';
 import { PendingBookingDto } from '../dto/pendingBooking.dto';
+import { JwtUserGuard } from 'src/guards/jwtUserAuth.guard';
 
 @Controller('users')
 export class UserController {
@@ -31,12 +34,12 @@ export class UserController {
   @Post('register')
   async register(@Body() userDto: UserRegistrationDto) {
     const user = await this._userService.register(userDto);
-    const { firstName, lastName, email } = user;
+    const { fullName, userName, email } = user;
     await this._otpService.sendOtp(email);
     this._logger.log(`User registered and OTP sent: ${email}`);
     return {
       message: 'User registered and OTP sent',
-      user: { firstName, lastName, email },
+      user: { fullName, userName, email },
     };
   }
 
@@ -49,10 +52,10 @@ export class UserController {
   async verifyOtp(@Body() verifyOtpDto: VerifyOtpDto) {
     await this._otpService.verifyOtp(verifyOtpDto.email, verifyOtpDto.otp);
     const user = await this._userService.verifyUser(verifyOtpDto.email);
-    const { firstName, lastName, email } = user;
+    const { fullName, userName, email } = user;
     return {
       message: 'OTP verified successfully',
-      user: { firstName, lastName, email },
+      user: { fullName, userName, email },
     };
   }
 
@@ -82,8 +85,6 @@ export class UserController {
 
   @Post('pendingBookings')
   async pendingBookings(@Body() PendingBookingDto: PendingBookingDto) {
-    console.log('dfd', PendingBookingDto);
-
     const pendingBooking =
       await this._userService.createPendingBooking(PendingBookingDto);
     return pendingBooking;
@@ -92,5 +93,23 @@ export class UserController {
   @Get('getBookingDetails')
   async getBookingDetails(@Query('bookingId') bookingId: string) {
     return await this._userService.getBookingDetails(bookingId);
+  }
+
+  @Get('completedBookings')
+  async getCompletedbookings(@Query('bookingId') bookingId: string) {
+    return await this._userService.getCompletedBooking(bookingId);
+  }
+
+  @UseGuards(JwtUserGuard)
+  @Get('bookings')
+  async userBookings(@Req() request) {
+    try {
+      const userId = request.user._id;
+      const bookings = await this._userService.getuserBookings(userId);
+      return bookings;
+    } catch (error) {
+      console.error('Controller error:', error);
+      throw error;
+    }
   }
 }

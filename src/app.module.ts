@@ -11,6 +11,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { AwsModule } from './aws/aws.module';
 import { HotelOwnerModule } from './hotel-owner/hotel-owner.module';
 import { StripeModule } from './stripe/stripe.module';
+import { CommunityModule } from './community/community.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { StripeModule } from './stripe/stripe.module';
     AwsModule,
     HotelOwnerModule,
     StripeModule,
+    CommunityModule,
   ],
 })
 export class AppModule {}

@@ -10,6 +10,7 @@ import { Hotel } from 'src/hotel-owner/schema/HotelSchema';
 import { Types } from 'mongoose';
 import { PendingBooking } from '../schema/pendingBooking.schema';
 import { PendingBookingDto } from '../dto/pendingBooking.dto';
+import { CompletedBooking } from '../schema/completedBookings.schema';
 
 @Injectable()
 export class UserRepository implements IUserRepository {
@@ -22,6 +23,8 @@ export class UserRepository implements IUserRepository {
     private _hotel: Model<Hotel>,
     @InjectModel(PendingBooking.name)
     private _pendingBooking: Model<PendingBooking>,
+    @InjectModel(CompletedBooking.name)
+    private _completedBooking: Model<CompletedBooking>,
   ) {}
 
   async createUser(userData: UserInterface): Promise<UserInterface> {
@@ -40,6 +43,10 @@ export class UserRepository implements IUserRepository {
     return await this._userModel.findOne({ email }).exec();
   }
 
+  async findByUsername(userName: string): Promise<User | null> {
+    return await this._userModel.findOne({ userName }).exec();
+  }
+
   async findUnverifiedUser(
     email: string,
   ): Promise<UnverifiedUserInterface | null> {
@@ -50,10 +57,64 @@ export class UserRepository implements IUserRepository {
     await this._UnverifiedUserModel.deleteOne({ email }).exec();
   }
 
-  async findHotels(destination: string) {
-    return await this._hotel
-      .find({ place: destination })
-      .sort({ createdAt: -1 });
+  async findHotels(searchData: any) {
+    try {
+      const { destination, checkIn, checkOut } = searchData;
+      const checkInDate = new Date(checkIn);
+      const checkOutDate = new Date(checkOut);
+
+      const hotels = await this._hotel.aggregate([
+        {
+          $match: {
+            place: destination,
+            isVerified: true,
+          },
+        },
+        {
+          $unwind: '$rooms',
+        },
+        {
+          $match: {
+            $and: [
+              {
+                'rooms.available': { $gt: 0 },
+                'rooms.availableDates': {
+                  $all: [
+                    { $elemMatch: { $gte: checkInDate, $lte: checkOutDate } },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+        {
+          $group: {
+            _id: '$_id',
+            ownerId: { $first: '$ownerId' },
+            hotelName: { $first: '$hotelName' },
+            streetAddress: { $first: '$streetAddress' },
+            place: { $first: '$place' },
+            state: { $first: '$state' },
+            country: { $first: '$country' },
+            description: { $first: '$description' },
+            images: { $first: '$images' },
+            hotelType: { $first: '$hotelType' },
+            amenities: { $first: '$amenities' },
+            isVerified: { $first: '$isVerified' },
+            rooms: { $push: '$rooms' },
+          },
+        },
+        {
+          $sort: { createdAt: -1 },
+        },
+      ]);
+
+      return hotels;
+    } catch (error) {
+      console.log(error);
+
+      throw error;
+    }
   }
 
   async findHotelById(hotelId: Types.ObjectId) {
@@ -67,18 +128,22 @@ export class UserRepository implements IUserRepository {
   }
 
   async createPendingBooking(PendingBookingDto: PendingBookingDto) {
-    const { userId, hotelId } = PendingBookingDto;
+    const { userId, hotelId } = PendingBookingDto.toDocument();
     const filter = { userId, hotelId };
     const bookingId = this.generateBookingId();
+
     const updatedBooking = await this._pendingBooking.findOneAndUpdate(
       filter,
-      { ...PendingBookingDto, status: 'pending', bookingId: bookingId },
+      {
+        ...PendingBookingDto.toDocument(),
+        status: 'pending',
+        bookingId: bookingId,
+      },
       {
         new: true,
         upsert: true,
       },
     );
-
     return updatedBooking;
   }
 
@@ -87,7 +152,37 @@ export class UserRepository implements IUserRepository {
       .findOne({ bookingId: bookingId })
       .populate('userId')
       .populate('hotelId');
+    return bookingDetails;
+  }
+
+  async findCompletedBooking(bookingId: string) {
+    const bookingDetails = await this._completedBooking
+      .findById({ _id: bookingId })
+      .populate('userId')
+      .populate('hotelId');
 
     return bookingDetails;
+  }
+
+  async findUserBookings(userId: Types.ObjectId) {
+    try {
+      const userBookings = await this._completedBooking
+        .find({ userId: userId })
+        .populate('userId')
+        .populate('hotelId')
+        .lean();
+      return userBookings;
+    } catch (error) {
+      console.error('Repository error:', error);
+      throw error;
+    }
+  }
+  async findUserById(userId: string): Promise<User> {
+    return this._userModel.findById(userId).exec();
+  }
+  async updateUser(userId: string, updateData: Partial<User>): Promise<User> {
+    return this._userModel
+      .findByIdAndUpdate(userId, updateData, { new: true })
+      .exec();
   }
 }

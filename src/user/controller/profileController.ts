@@ -3,8 +3,9 @@ import {
   Controller,
   Get,
   Logger,
-  Put,
+  Patch,
   Query,
+  Req,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -37,19 +38,27 @@ export class ProfileController {
     return this._userService.getUserDetails(email);
   }
 
-  @Put('editProfile')
+  @Patch('editProfile')
+  @UseGuards(JwtUserGuard)
   @UseInterceptors(FileInterceptor('profilePicture'))
   async editUser(
     @UploadedFile() profilePicture: Express.Multer.File,
     @Body() editProfileDto: EditProfileDto,
+    @Req() request,
   ) {
-    console.log(profilePicture);
+    let imageLocation;
 
-    const res = await this._s3Service.uploadFile(profilePicture);
+    if (profilePicture) {
+      const uploadResult = await this._s3Service.uploadFile(profilePicture);
+      imageLocation = uploadResult.Location;
+    }
+
     const response = await this._profileService.editProfile(
+      request.user.id,
       editProfileDto,
-      res.Location,
+      imageLocation,
     );
+
     return response;
   }
 }

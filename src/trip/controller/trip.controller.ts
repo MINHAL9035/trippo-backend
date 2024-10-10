@@ -33,7 +33,6 @@ export class TripController {
     @Body() tripDto: TripDto,
   ) {
     const userId = request.user._id;
-    this._logger.log('my userId', typeof userId);
     const Image = await this._s3Service.uploadFile(tripImage);
     const trip = await this._tripService.create(
       tripDto,

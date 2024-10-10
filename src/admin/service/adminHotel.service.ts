@@ -8,6 +8,8 @@ import { UnverifiedOwner } from 'src/hotel-owner/schema/UnverifiedOwnerSchema';
 import { OwnerRequest } from 'src/hotel-owner/schema/PendingRequest.schema';
 import { ConfigService } from '@nestjs/config';
 import { MailerService } from '@nestjs-modules/mailer';
+import { UnverifiedHotel } from 'src/hotel-owner/schema/UnverifiedHotel';
+import { Hotel } from 'src/hotel-owner/schema/HotelSchema';
 
 @Injectable()
 export class AdminHotelService {
@@ -15,8 +17,12 @@ export class AdminHotelService {
   constructor(
     @InjectModel(OwnerRequest.name)
     private _OwnerRequest: Model<OwnerRequest>,
+    @InjectModel(Hotel.name)
+    private _hotelModel: Model<Hotel>,
     private readonly _adminHotelRepository: AdminHotelRepository,
     @InjectModel(Owner.name) private _owner: Model<Owner>,
+    @InjectModel(UnverifiedHotel.name)
+    private _unVerifiedHotel: Model<UnverifiedHotel>,
     @InjectModel(UnverifiedOwner.name)
     private _unverifiedOwner: Model<UnverifiedOwner>,
     private readonly _configService: ConfigService,
@@ -140,8 +146,22 @@ export class AdminHotelService {
         const newOwner = new this._owner(unverifiedOwner.toObject());
         await newOwner.save();
         await this._unverifiedOwner.findByIdAndDelete(ownerId);
+
+        // Handle single hotel
+        const unverifiedHotel = await this._unVerifiedHotel.findOne({
+          ownerId: ownerId,
+        });
+        if (unverifiedHotel) {
+          const verifiedHotel = new this._hotelModel(
+            unverifiedHotel.toObject(),
+          );
+          verifiedHotel.isVerified = true;
+          await verifiedHotel.save();
+          await this._unVerifiedHotel.findByIdAndDelete(unverifiedHotel._id);
+        }
+
         await this.sendMail(newOwner.email, 'accepted');
-        return { message: 'Owner approved successfully' };
+        return { message: 'Owner approved successfully and hotel verified' };
       } else {
         await this.sendMail(unverifiedOwner.email, 'rejected');
         return { message: 'Owner rejected successfully' };

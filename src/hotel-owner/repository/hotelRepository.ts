@@ -6,18 +6,22 @@ import { HotelInterface } from '../interface/IHotel.interface';
 import { UpdateHotelDto } from '../dto/updateHotel.dto';
 import { SubmitDetailsDto } from '../dto/submitDetails.dto';
 import { OwnerRequest } from '../schema/PendingRequest.schema';
+import { UnverifiedHotel } from '../schema/UnverifiedHotel';
+import { EditHotelDto } from '../dto/editHotel.dto';
 
 @Injectable()
 export class HotelRepository {
   constructor(
     @InjectModel(Hotel.name)
     private readonly _hotelModel: Model<Hotel>,
+    @InjectModel(UnverifiedHotel.name)
+    private readonly _unverifiedHotel: Model<UnverifiedHotel>,
     @InjectModel(OwnerRequest.name)
     private readonly _OwnerRequest: Model<OwnerRequest>,
   ) {}
 
   async createHotel(hotelData): Promise<HotelInterface> {
-    const newHotel = new this._hotelModel(hotelData);
+    const newHotel = new this._unverifiedHotel(hotelData);
     return await newHotel.save();
   }
 
@@ -30,7 +34,7 @@ export class HotelRepository {
     hotelId: Types.ObjectId,
     UpdateHotelDto: UpdateHotelDto,
   ): Promise<HotelInterface> {
-    const updatedHotel = await this._hotelModel.findOneAndUpdate(
+    const updatedHotel = await this._unverifiedHotel.findOneAndUpdate(
       { _id: hotelId },
       { $set: { ...UpdateHotelDto } },
       { new: true, runValidators: true },
@@ -39,7 +43,7 @@ export class HotelRepository {
   }
 
   async findHotelById(hotelId: Types.ObjectId) {
-    const hotelDetails = await this._hotelModel
+    const hotelDetails = await this._unverifiedHotel
       .findById(hotelId)
       .populate('ownerId', '-__v')
       .lean()
@@ -55,5 +59,27 @@ export class HotelRepository {
       ownerId: ownerId,
     });
     return await newPendingRequest.save();
+  }
+
+  async find(hotelId: Types.ObjectId) {
+    return await this._hotelModel.findOne({ _id: hotelId });
+  }
+  async findVerifiedHotel(hotelId: Types.ObjectId) {
+    return await this._hotelModel.findOne({ _id: hotelId });
+  }
+
+  async findByIdAndUpdate(hotelId: Types.ObjectId, updateData) {
+    return this._hotelModel
+      .findByIdAndUpdate(hotelId, updateData, { new: true })
+      .exec();
+  }
+
+  async editHotelInfo(
+    hotelId: Types.ObjectId,
+    updatedHotelData: EditHotelDto,
+  ): Promise<Hotel> {
+    return this._hotelModel
+      .findByIdAndUpdate(hotelId, { $set: updatedHotelData }, { new: true })
+      .exec();
   }
 }

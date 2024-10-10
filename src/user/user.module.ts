@@ -16,6 +16,7 @@ import { S3Service } from 'src/aws/aws.service';
 import { ProfileService } from './service/profile.service';
 import { HotelSchema } from 'src/hotel-owner/schema/HotelSchema';
 import { PendingBookingSchema } from './schema/pendingBooking.schema';
+import { CompletedBookingSchema } from './schema/completedBookings.schema';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { PendingBookingSchema } from './schema/pendingBooking.schema';
       { name: 'RefreshToken', schema: RefreshTokenSchema },
       { name: 'Hotel', schema: HotelSchema },
       { name: 'PendingBooking', schema: PendingBookingSchema },
+      { name: 'CompletedBooking', schema: CompletedBookingSchema },
     ]),
     AwsModule,
   ],

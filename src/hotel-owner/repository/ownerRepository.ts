@@ -80,7 +80,6 @@ export class OwnerRepository {
     ownerId: Types.ObjectId,
   ): Promise<OwnerInterface | null> {
     const response = await this._ownerModel.findById(ownerId).exec();
-    console.log('my owner repo', response);
     return response;
   }
 

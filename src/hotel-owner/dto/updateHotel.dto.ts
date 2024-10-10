@@ -5,12 +5,6 @@ export class UpdateHotelDto {
   hotelName: string;
 
   @IsString()
-  roomType: string;
-
-  @IsString()
-  numberOfRooms: string;
-
-  @IsString()
   streetAddress: string;
 
   @IsString()
@@ -21,7 +15,4 @@ export class UpdateHotelDto {
 
   @IsString()
   country: string;
-
-  @IsString()
-  postalCode: string;
 }

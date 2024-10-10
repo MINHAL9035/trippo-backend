@@ -9,14 +9,14 @@ import {
 
 export class UserRegistrationDto {
   @IsString()
-  @MinLength(2, { message: 'FirstName must be at least 2 character long' })
+  @MinLength(4, { message: 'FirstName must be at least 2 character long' })
   @MaxLength(50, { message: 'First name must not exceed 50 characters' })
-  firstName: string;
+  fullName: string;
 
   @IsString()
-  @MinLength(1, { message: 'Last name must be at least 2 characters long' })
-  @MaxLength(50, { message: 'Last name must not exceed 50 characters' })
-  lastName: string;
+  @MinLength(3)
+  @MaxLength(50)
+  userName: string;
 
   @IsEmail()
   email: string;

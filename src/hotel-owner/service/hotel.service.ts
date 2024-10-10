@@ -6,6 +6,7 @@ import { OwnerRepository } from '../repository/ownerRepository';
 import { Types } from 'mongoose';
 import { UpdateHotelDto } from '../dto/updateHotel.dto';
 import { SubmitDetailsDto } from '../dto/submitDetails.dto';
+import { EditHotelDto } from '../dto/editHotel.dto';
 
 @Injectable()
 export class HotelService {
@@ -78,6 +79,19 @@ export class HotelService {
       throw error;
     }
   }
+  async getFullHotelDetails(hotelId: Types.ObjectId) {
+    try {
+      const hotelDetails =
+        await this._hotelRepository.findVerifiedHotel(hotelId);
+      if (!hotelDetails) {
+        throw new Error('Hotel not found');
+      }
+      return hotelDetails;
+    } catch (error) {
+      this._logger.error(error);
+      throw error;
+    }
+  }
 
   async submitDetails(SubmitDetailsDto: SubmitDetailsDto) {
     try {
@@ -88,5 +102,41 @@ export class HotelService {
       this._logger.error(error);
       throw error;
     }
+  }
+
+  async editHotel(editHotelDto: EditHotelDto, hotelId: Types.ObjectId) {
+    try {
+      console.log('hsk', hotelId);
+
+      const existingHotel = await this._hotelRepository.find(hotelId);
+      if (!existingHotel) {
+        throw new NotFoundException('Hotel not found');
+      }
+
+      const updatedHotel = { ...existingHotel.toObject(), ...editHotelDto };
+
+      const editedHotel = await this._hotelRepository.findByIdAndUpdate(
+        hotelId,
+        updatedHotel,
+      );
+      return editedHotel;
+    } catch (error) {
+      this._logger.error(error);
+      throw error;
+    }
+  }
+
+  async editHotelInfo(hotelId: Types.ObjectId, updatedHotelData: EditHotelDto) {
+    const hotel = await this._hotelRepository.find(hotelId);
+    if (!hotel) {
+      throw new NotFoundException(`Hotel with ID ${hotelId} not found`);
+    }
+
+    const updatedHotel = await this._hotelRepository.editHotelInfo(
+      hotelId,
+      updatedHotelData,
+    );
+
+    return updatedHotel;
   }
 }
