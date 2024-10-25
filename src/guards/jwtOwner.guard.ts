@@ -9,7 +9,7 @@ import { Types } from 'mongoose';
 import { OwnerRepository } from 'src/hotel-owner/repository/ownerRepository';
 
 @Injectable()
-export class JwtUserGuard extends AuthGuard('userAccessToken') {
+export class JwtOwnerGuard extends AuthGuard('ownerAccessToken') {
   constructor(private readonly _ownerRepository: OwnerRepository) {
     super();
   }
@@ -29,7 +29,6 @@ export class JwtUserGuard extends AuthGuard('userAccessToken') {
       };
 
       const ownerId = new Types.ObjectId(decoded.ownerId);
-      console.log('user', ownerId);
 
       const owner = await this._ownerRepository.findJwtOwnerById(ownerId);
 

@@ -30,8 +30,6 @@ export class JwtUserGuard extends AuthGuard('userAccessToken') {
       };
 
       const userId = new Types.ObjectId(decoded.userId);
-      console.log('user', userId);
-
       const user = await this._loginRepository.findJwtUserById(userId);
 
       if (!user) {

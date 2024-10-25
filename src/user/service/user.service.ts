@@ -11,11 +11,15 @@ import { UserInterface } from '../interface/user/IUser.interface';
 import { IUserService } from '../interface/user/IUserService.interface';
 import { Types } from 'mongoose';
 import { PendingBookingDto } from '../dto/pendingBooking.dto';
+import { ProfileService } from './profile.service';
 
 @Injectable()
 export class UserService implements IUserService {
   private readonly _logger = new Logger(UserService.name);
-  constructor(private readonly _userRepository: UserRepository) {}
+  constructor(
+    private readonly _userRepository: UserRepository,
+    private readonly _profileService: ProfileService,
+  ) {}
 
   /**
    * Registers a new user if the email is not already taken.
@@ -96,7 +100,9 @@ export class UserService implements IUserService {
         role: unverifiedUser.role,
       };
 
-      await this._userRepository.createUser(verifiedUser);
+      const createdUser = await this._userRepository.createUser(verifiedUser);
+      const userId = new Types.ObjectId(createdUser.id);
+      await this._profileService.createWallet(userId);
       await this._userRepository.deleteUnverifiedUser(email);
 
       this._logger.log(`User verified: ${email}`);
@@ -183,6 +189,16 @@ export class UserService implements IUserService {
   async getuserBookings(userId: Types.ObjectId) {
     try {
       const userBookings = await this._userRepository.findUserBookings(userId);
+      return userBookings;
+    } catch (error) {
+      console.error('Service error:', error);
+      throw error;
+    }
+  }
+  async getCancelledBookings(userId: Types.ObjectId) {
+    try {
+      const userBookings =
+        await this._userRepository.findUserCancelBookings(userId);
       return userBookings;
     } catch (error) {
       console.error('Service error:', error);

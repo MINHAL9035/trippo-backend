@@ -8,6 +8,7 @@ import { SubmitDetailsDto } from '../dto/submitDetails.dto';
 import { OwnerRequest } from '../schema/PendingRequest.schema';
 import { UnverifiedHotel } from '../schema/UnverifiedHotel';
 import { EditHotelDto } from '../dto/editHotel.dto';
+import { CompletedBooking } from 'src/user/schema/completedBookings.schema';
 
 @Injectable()
 export class HotelRepository {
@@ -18,6 +19,8 @@ export class HotelRepository {
     private readonly _unverifiedHotel: Model<UnverifiedHotel>,
     @InjectModel(OwnerRequest.name)
     private readonly _OwnerRequest: Model<OwnerRequest>,
+    @InjectModel(CompletedBooking.name)
+    private readonly _completedBookingModel: Model<CompletedBooking>,
   ) {}
 
   async createHotel(hotelData): Promise<HotelInterface> {
@@ -81,5 +84,23 @@ export class HotelRepository {
     return this._hotelModel
       .findByIdAndUpdate(hotelId, { $set: updatedHotelData }, { new: true })
       .exec();
+  }
+
+  async findBookings(ownerId: Types.ObjectId) {
+    const ownerHotels = await this._hotelModel.find({ ownerId: ownerId });
+    const hotelIds = ownerHotels.map((hotel) => hotel._id);
+    const bookings = await this._completedBookingModel
+      .find({ hotelId: { $in: hotelIds } })
+      .populate('hotelId')
+      .populate('userId')
+      .sort({ createdAt: -1 });
+    return bookings;
+  }
+
+  async findOwnerBookingDetails(bookingId: string) {
+    return this._completedBookingModel
+      .findOne({ bookingId: bookingId })
+      .populate('userId')
+      .populate('hotelId');
   }
 }

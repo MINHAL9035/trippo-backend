@@ -21,6 +21,18 @@ export class PendingBooking extends Document {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   userId: Types.ObjectId;
 
+  @Prop({ required: true })
+  roomRate: number;
+
+  @Prop({ required: true })
+  rooms: number;
+
+  @Prop({ required: true })
+  totalPrice: number;
+
+  @Prop({ required: true })
+  nights: number;
+
   @Prop({ default: 'pending' })
   status: string;
 }

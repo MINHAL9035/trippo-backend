@@ -139,4 +139,22 @@ export class HotelService {
 
     return updatedHotel;
   }
+
+  async findBookings(ownerId: Types.ObjectId) {
+    try {
+      return this._hotelRepository.findBookings(ownerId);
+    } catch (error) {
+      this._logger.error(error);
+      throw error;
+    }
+  }
+
+  async findOwnerBookingDetails(bookingId: string) {
+    try {
+      return this._hotelRepository.findOwnerBookingDetails(bookingId);
+    } catch (error) {
+      this._logger.error(error);
+      throw error;
+    }
+  }
 }

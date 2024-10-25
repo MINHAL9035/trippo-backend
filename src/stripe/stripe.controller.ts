@@ -7,12 +7,16 @@ export class StripeController {
 
   @Post('checkout-session')
   async createCheckoutSession(@Body() body: any) {
-    const { bookingId, amount, currency } = body;
-    return this.stripeService.createCheckoutSession(
-      bookingId,
-      amount,
-      currency,
-    );
+    try {
+      const { bookingId, amount, currency } = body;
+      return this.stripeService.createCheckoutSession(
+        bookingId,
+        amount,
+        currency,
+      );
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   @Post('webhook')

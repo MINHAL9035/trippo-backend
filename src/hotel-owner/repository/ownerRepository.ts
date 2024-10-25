@@ -79,7 +79,7 @@ export class OwnerRepository {
   async findJwtOwnerById(
     ownerId: Types.ObjectId,
   ): Promise<OwnerInterface | null> {
-    const response = await this._ownerModel.findById(ownerId).exec();
+    const response = await this._verifiedOwner.findOne({ _id: ownerId }).exec();
     return response;
   }
 

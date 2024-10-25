@@ -77,12 +77,10 @@ export class CommunityController {
   @Get('searchUserDetails')
   async searchUserDetails(@Query('userName') userName: string) {
     const user = await this._communityRepository.findUserByUserName(userName);
-    console.log('user', user);
 
     const posts = await this._communityRepository.findSingleUserPosts(
       user._id as Types.ObjectId,
     );
-    console.log('posts', posts);
 
     return {
       ...user.toObject(),

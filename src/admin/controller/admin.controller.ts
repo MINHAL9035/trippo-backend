@@ -100,4 +100,9 @@ export class AdminController {
       throw error;
     }
   }
+
+  @Get('dashboard')
+  async getDashBoard() {
+    return this._adminService.getDashBoard();
+  }
 }

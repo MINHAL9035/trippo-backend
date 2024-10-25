@@ -17,6 +17,7 @@ import { ProfileService } from './service/profile.service';
 import { HotelSchema } from 'src/hotel-owner/schema/HotelSchema';
 import { PendingBookingSchema } from './schema/pendingBooking.schema';
 import { CompletedBookingSchema } from './schema/completedBookings.schema';
+import { WalletSchema } from './schema/wallet.schema';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { CompletedBookingSchema } from './schema/completedBookings.schema';
       { name: 'Hotel', schema: HotelSchema },
       { name: 'PendingBooking', schema: PendingBookingSchema },
       { name: 'CompletedBooking', schema: CompletedBookingSchema },
+      { name: 'Wallet', schema: WalletSchema },
     ]),
     AwsModule,
   ],

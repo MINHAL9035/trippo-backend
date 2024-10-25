@@ -79,9 +79,94 @@ export class OwnerController {
     const newOwnerId = new Types.ObjectId(ownerId);
     const hotels = await this._hotelModel.find({ ownerId: newOwnerId });
     const hotelIds = hotels.map((hotel) => hotel._id);
+
+    const completedStatusMatch = {
+      hotelId: { $in: hotelIds },
+      status: 'completed',
+    };
+    const cancelledStatusMatch = {
+      hotelId: { $in: hotelIds },
+      status: 'cancelled',
+    };
+
     const totalBookings = await this._completedBooking.countDocuments({
       hotelId: { $in: hotelIds },
     });
-    return totalBookings;
+
+    const completedBooking =
+      await this._completedBooking.countDocuments(completedStatusMatch);
+    const cancelledBooking =
+      await this._completedBooking.countDocuments(cancelledStatusMatch);
+
+    const totalRevenue = await this._completedBooking.aggregate([
+      {
+        $match: completedStatusMatch,
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$totalPrice' },
+        },
+      },
+    ]);
+
+    const currentYear = new Date().getFullYear();
+    const monthlyRevenue = await this._completedBooking.aggregate([
+      {
+        $match: {
+          ...completedStatusMatch,
+          createdAt: {
+            $gte: new Date(currentYear, 0, 1),
+            $lt: new Date(currentYear + 1, 0, 1),
+          },
+        },
+      },
+      {
+        $group: {
+          _id: { $month: '$createdAt' },
+          revenue: { $sum: '$totalPrice' },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+    ]);
+
+    const yearlyRevenue = await this._completedBooking.aggregate([
+      {
+        $match: {
+          ...completedStatusMatch,
+          createdAt: {
+            $gte: new Date(currentYear - 4, 0, 1),
+          },
+        },
+      },
+      {
+        $group: {
+          _id: { $year: '$createdAt' },
+          revenue: { $sum: '$totalPrice' },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+    ]);
+
+    return {
+      totalBookings,
+      completedBooking,
+      cancelledBooking,
+      totalRevenue: totalRevenue[0]?.total || 0,
+      monthlyRevenue: monthlyRevenue.map((item) => ({
+        month: new Date(2024, item._id - 1).toLocaleString('default', {
+          month: 'short',
+        }),
+        revenue: item.revenue,
+      })),
+      yearlyRevenue: yearlyRevenue.map((item) => ({
+        year: item._id,
+        revenue: item.revenue,
+      })),
+    };
   }
 }

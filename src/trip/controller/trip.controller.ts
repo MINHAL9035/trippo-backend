@@ -16,6 +16,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { S3Service } from 'src/aws/aws.service';
 import { JwtUserGuard } from 'src/guards/jwtUserAuth.guard';
 import { Types } from 'mongoose';
+import { CreateAiTripDto } from '../dto/aiTripCreation.dto';
 @UseGuards(JwtUserGuard)
 @Controller('trip')
 export class TripController {
@@ -55,5 +56,21 @@ export class TripController {
     console.log(userId);
     const newUserId = new Types.ObjectId(userId);
     return this._tripService.tripDetails(newUserId, page, limit);
+  }
+
+  @Post('ai-trip')
+  async create(@Req() request, @Body() createAiTripDto: CreateAiTripDto) {
+    console.log('my trip data', createAiTripDto);
+    const userId = request.user._id;
+    const result = await this._tripService.createAiTrip(
+      createAiTripDto,
+      userId,
+    );
+    return result;
+  }
+
+  @Get('ai-trip-details')
+  async getAiTrip(@Query('tripId') tripId: string) {
+    return this._tripService.getAiTrip(tripId);
   }
 }

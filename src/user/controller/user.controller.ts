@@ -16,6 +16,8 @@ import { VerifyOtpDto } from '../dto/verifyOtp.dto';
 import { Types } from 'mongoose';
 import { PendingBookingDto } from '../dto/pendingBooking.dto';
 import { JwtUserGuard } from 'src/guards/jwtUserAuth.guard';
+import { SearchState } from '../interface/user/ISearchData.interface';
+import { ProfileService } from '../service/profile.service';
 
 @Controller('users')
 export class UserController {
@@ -23,6 +25,7 @@ export class UserController {
 
   constructor(
     private readonly _userService: UserService,
+    private readonly _profileService: ProfileService,
     private readonly _otpService: OtpService,
   ) {}
 
@@ -73,7 +76,7 @@ export class UserController {
   }
 
   @Post('searchResults')
-  async searchHotels(@Body() searchData: any) {
+  async searchHotels(@Body() searchData: SearchState) {
     return this._userService.searchHotels(searchData);
   }
 
@@ -85,6 +88,7 @@ export class UserController {
 
   @Post('pendingBookings')
   async pendingBookings(@Body() PendingBookingDto: PendingBookingDto) {
+    console.log('pendingBookings', PendingBookingDto);
     const pendingBooking =
       await this._userService.createPendingBooking(PendingBookingDto);
     return pendingBooking;
@@ -111,5 +115,28 @@ export class UserController {
       console.error('Controller error:', error);
       throw error;
     }
+  }
+  @UseGuards(JwtUserGuard)
+  @Get('cancelled')
+  async userCancelledBookings(@Req() request) {
+    try {
+      const userId = request.user._id;
+      const bookings = await this._userService.getCancelledBookings(userId);
+      return bookings;
+    } catch (error) {
+      console.error('Controller error:', error);
+      throw error;
+    }
+  }
+
+  @Post('cancelBooking')
+  async cancelBooking(@Body('bookingId') bookingId: string) {
+    await this._profileService.cancelBooking(bookingId);
+    return { message: 'Booking cancelled successfully' };
+  }
+
+  @Get('wallet')
+  async getUserWallet(@Query('userId') userId: string) {
+    return this._profileService.getUserWallet(userId);
   }
 }

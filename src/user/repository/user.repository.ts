@@ -11,6 +11,8 @@ import { Types } from 'mongoose';
 import { PendingBooking } from '../schema/pendingBooking.schema';
 import { PendingBookingDto } from '../dto/pendingBooking.dto';
 import { CompletedBooking } from '../schema/completedBookings.schema';
+import { SearchState } from '../interface/user/ISearchData.interface';
+import { Wallet } from '../schema/wallet.schema';
 
 @Injectable()
 export class UserRepository implements IUserRepository {
@@ -25,6 +27,8 @@ export class UserRepository implements IUserRepository {
     private _pendingBooking: Model<PendingBooking>,
     @InjectModel(CompletedBooking.name)
     private _completedBooking: Model<CompletedBooking>,
+    @InjectModel(Wallet.name)
+    private _walletModel: Model<Wallet>,
   ) {}
 
   async createUser(userData: UserInterface): Promise<UserInterface> {
@@ -56,18 +60,18 @@ export class UserRepository implements IUserRepository {
   async deleteUnverifiedUser(email: string): Promise<void> {
     await this._UnverifiedUserModel.deleteOne({ email }).exec();
   }
-
-  async findHotels(searchData: any) {
+  async findHotels(searchData: SearchState) {
+    console.log('searchState', searchData);
     try {
-      const { destination, checkIn, checkOut } = searchData;
-      const checkInDate = new Date(checkIn);
-      const checkOutDate = new Date(checkOut);
+      const checkInDate = new Date(searchData.checkInDate);
+      const checkOutDate = new Date(searchData.checkOutDate);
+      const totalGuests = searchData.guests.adults + searchData.guests.children;
+      const requiredRooms = searchData.guests.rooms;
 
       const hotels = await this._hotel.aggregate([
         {
           $match: {
-            place: destination,
-            isVerified: true,
+            place: searchData.selectedPlace,
           },
         },
         {
@@ -75,15 +79,11 @@ export class UserRepository implements IUserRepository {
         },
         {
           $match: {
+            'rooms.capacity': { $gte: Math.ceil(totalGuests / requiredRooms) },
+            'rooms.available': { $gte: requiredRooms },
             $and: [
-              {
-                'rooms.available': { $gt: 0 },
-                'rooms.availableDates': {
-                  $all: [
-                    { $elemMatch: { $gte: checkInDate, $lte: checkOutDate } },
-                  ],
-                },
-              },
+              { 'rooms.availableDates.0': { $lte: checkInDate } },
+              { 'rooms.availableDates.1': { $gte: checkOutDate } },
             ],
           },
         },
@@ -96,27 +96,29 @@ export class UserRepository implements IUserRepository {
             place: { $first: '$place' },
             state: { $first: '$state' },
             country: { $first: '$country' },
+            isVerified: { $first: '$isVerified' },
             description: { $first: '$description' },
             images: { $first: '$images' },
             hotelType: { $first: '$hotelType' },
             amenities: { $first: '$amenities' },
-            isVerified: { $first: '$isVerified' },
-            rooms: { $push: '$rooms' },
+            availableRooms: {
+              $push: '$rooms',
+            },
           },
         },
         {
-          $sort: { createdAt: -1 },
+          $sort: {
+            'availableRooms.rate': 1,
+          },
         },
       ]);
 
+      console.log('my searched hotels', hotels);
       return hotels;
     } catch (error) {
-      console.log(error);
-
       throw error;
     }
   }
-
   async findHotelById(hotelId: Types.ObjectId) {
     return await this._hotel.findById(hotelId);
   }
@@ -128,23 +130,40 @@ export class UserRepository implements IUserRepository {
   }
 
   async createPendingBooking(PendingBookingDto: PendingBookingDto) {
-    const { userId, hotelId } = PendingBookingDto.toDocument();
-    const filter = { userId, hotelId };
-    const bookingId = this.generateBookingId();
+    try {
+      const bookingId = this.generateBookingId();
 
-    const updatedBooking = await this._pendingBooking.findOneAndUpdate(
-      filter,
-      {
-        ...PendingBookingDto.toDocument(),
+      const checkIn = new Date(PendingBookingDto.checkIn);
+      const checkOut = new Date(PendingBookingDto.checkOut);
+      const nights = Math.ceil(
+        (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24),
+      );
+
+      const totalPrice =
+        PendingBookingDto.roomRate * PendingBookingDto.rooms * nights;
+
+      const pendingBooking = new this._pendingBooking({
+        bookingId,
+        checkIn: PendingBookingDto.checkIn,
+        checkOut: PendingBookingDto.checkOut,
+        hotelId: new Types.ObjectId(PendingBookingDto.hotelId),
+        roomId: PendingBookingDto.roomId,
+        userId: new Types.ObjectId(PendingBookingDto.userId),
+        roomRate: PendingBookingDto.roomRate,
+        rooms: PendingBookingDto.rooms,
+        totalPrice,
+        nights: nights,
         status: 'pending',
-        bookingId: bookingId,
-      },
-      {
-        new: true,
-        upsert: true,
-      },
-    );
-    return updatedBooking;
+      });
+
+      const savedBooking = await pendingBooking.save();
+      return {
+        ...savedBooking.toObject(),
+        nights,
+      };
+    } catch (error) {
+      throw new Error('Failed to create pending booking');
+    }
   }
 
   async findBookingDetails(bookingId: string) {
@@ -157,7 +176,7 @@ export class UserRepository implements IUserRepository {
 
   async findCompletedBooking(bookingId: string) {
     const bookingDetails = await this._completedBooking
-      .findById({ _id: bookingId })
+      .findOne({ bookingId: bookingId })
       .populate('userId')
       .populate('hotelId');
 
@@ -167,7 +186,20 @@ export class UserRepository implements IUserRepository {
   async findUserBookings(userId: Types.ObjectId) {
     try {
       const userBookings = await this._completedBooking
-        .find({ userId: userId })
+        .find({ userId: userId, status: 'completed' })
+        .populate('userId')
+        .populate('hotelId')
+        .lean();
+      return userBookings;
+    } catch (error) {
+      console.error('Repository error:', error);
+      throw error;
+    }
+  }
+  async findUserCancelBookings(userId: Types.ObjectId) {
+    try {
+      const userBookings = await this._completedBooking
+        .find({ userId: userId, status: 'cancelled' })
         .populate('userId')
         .populate('hotelId')
         .lean();
@@ -184,5 +216,12 @@ export class UserRepository implements IUserRepository {
     return this._userModel
       .findByIdAndUpdate(userId, updateData, { new: true })
       .exec();
+  }
+
+  async findWallet(userId: string) {
+    const newUserId = new Types.ObjectId(userId);
+    const wallet = await this._walletModel.findOne({ userId: newUserId });
+    console.log('wallet', wallet);
+    return wallet;
   }
 }

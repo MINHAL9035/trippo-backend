@@ -12,6 +12,7 @@ import { AwsModule } from './aws/aws.module';
 import { HotelOwnerModule } from './hotel-owner/hotel-owner.module';
 import { StripeModule } from './stripe/stripe.module';
 import { CommunityModule } from './community/community.module';
+import { SocketIoModule } from './socket-io/socket-io.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { CommunityModule } from './community/community.module';
     HotelOwnerModule,
     StripeModule,
     CommunityModule,
+    SocketIoModule,
   ],
 })
 export class AppModule {}

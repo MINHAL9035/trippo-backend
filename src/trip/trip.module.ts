@@ -8,6 +8,7 @@ import { S3Service } from 'src/aws/aws.service';
 import { UserSchema } from 'src/user/schema/user.schema';
 import { RefreshTokenSchema } from 'src/auth/schema/refresh.token.schema';
 import { LoginRepository } from 'src/auth/repository/login.repository';
+import { AiTripSchema } from './schema/aiTrip.schema';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { LoginRepository } from 'src/auth/repository/login.repository';
       { name: 'Trip', schema: TripSchema },
       { name: 'User', schema: UserSchema },
       { name: 'RefreshToken', schema: RefreshTokenSchema },
+      { name: 'AiTrip', schema: AiTripSchema },
     ]),
   ],
   controllers: [TripController],

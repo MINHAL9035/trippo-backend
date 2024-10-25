@@ -139,4 +139,28 @@ export class AdminService {
       owners,
     };
   }
+
+  async getDashBoard() {
+    const totalUsers = await this._userModel.countDocuments({});
+    const totalOwners = await this._ownerModel.countDocuments({});
+
+    const latestUsers = await this._userModel
+      .find({})
+      .select('fullName email createdAt')
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    const latestOwners = await this._ownerModel
+      .find({})
+      .select('firstName lastName email createdAt')
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    return {
+      totalUsers,
+      totalOwners,
+      latestUsers,
+      latestOwners,
+    };
+  }
 }

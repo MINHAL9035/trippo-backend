@@ -6,7 +6,9 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UploadedFiles,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { CreateHotelDto } from '../dto/createHotel.dto';
@@ -19,6 +21,7 @@ import { Hotel } from '../schema/HotelSchema';
 import { EditHotelDto } from '../dto/editHotel.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { S3Service } from 'src/aws/aws.service';
+import { JwtOwnerGuard } from 'src/guards/jwtOwner.guard';
 
 @Controller('hotelOwner')
 export class HotelController {
@@ -101,5 +104,17 @@ export class HotelController {
   async getFullHotelDetails(@Query('hotelId') hotelId: string) {
     const newHotelId = new Types.ObjectId(hotelId);
     return this._hotelService.getFullDetails(newHotelId);
+  }
+
+  @UseGuards(JwtOwnerGuard)
+  @Get('bookings')
+  async getBookings(@Req() request) {
+    const ownerId = request.owner._id;
+    return this._hotelService.findBookings(ownerId);
+  }
+
+  @Get('bookingDetails-owner')
+  async ownerBookigDetails(@Query('bookingId') bookingId: string) {
+    return this._hotelService.findOwnerBookingDetails(bookingId);
   }
 }
