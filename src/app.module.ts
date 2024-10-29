@@ -8,6 +8,10 @@ import { WinstonModule } from 'nest-winston';
 import { winstonConfig } from './common/config/logger.config';
 import { TripModule } from './trip/trip.module';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { AwsModule } from './aws/aws.module';
+import { HotelOwnerModule } from './hotel-owner/hotel-owner.module';
+import { StripeModule } from './stripe/stripe.module';
+import { CommunityModule } from './community/community.module';
 
 @Module({
   imports: [
@@ -48,6 +52,10 @@ import { MailerModule } from '@nestjs-modules/mailer';
     AuthModule,
     AdminModule,
     TripModule,
+    AwsModule,
+    HotelOwnerModule,
+    StripeModule,
+    CommunityModule,
   ],
 })
 export class AppModule {}

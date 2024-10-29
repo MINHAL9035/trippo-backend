@@ -4,10 +4,10 @@ import { Document } from 'mongoose';
 @Schema({ timestamps: true })
 export class UnverifiedUser extends Document {
   @Prop({ required: true })
-  firstName: string;
+  fullName: string;
 
   @Prop({ required: true })
-  lastName: string;
+  userName: string;
 
   @Prop({ required: true })
   email: string;

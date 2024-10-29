@@ -89,4 +89,20 @@ export class AdminController {
   async updateStatus(@Body() updateUserStatusDto: UpdateUserStatusDto) {
     return this._adminService.updateStatus(updateUserStatusDto);
   }
+
+  @UseGuards(JwtAdminGuard)
+  @Get('owners')
+  async getOwners() {
+    try {
+      return this._adminService.getAllOwners();
+    } catch (error) {
+      this._logger.error('Error during login', error.stack);
+      throw error;
+    }
+  }
+
+  @Get('dashboard')
+  async getDashBoard() {
+    return this._adminService.getDashBoard();
+  }
 }

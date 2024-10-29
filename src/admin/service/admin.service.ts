@@ -14,6 +14,7 @@ import { ConfigService } from '@nestjs/config';
 import { UpdateUserStatusDto } from '../dto/updateUserStatus.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from 'src/user/schema/user.schema';
+import { Owner } from 'src/hotel-owner/schema/owner.schema';
 
 @Injectable()
 export class AdminService {
@@ -21,7 +22,8 @@ export class AdminService {
     private readonly _adminRepository: AdminLoginRepository,
     private readonly _jwtService: JwtService,
     private readonly _configService: ConfigService,
-    @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(User.name) private _userModel: Model<User>,
+    @InjectModel(Owner.name) private _ownerModel: Model<Owner>,
   ) {}
 
   /**
@@ -102,7 +104,7 @@ export class AdminService {
   }
 
   async getAllUsers(): Promise<{ users: User[] }> {
-    const users = await this.userModel
+    const users = await this._userModel
       .find({ role: 'user' })
       .sort({ createdAt: -1 })
       .exec();
@@ -116,7 +118,7 @@ export class AdminService {
     const { userIds, action } = updateUserStatusDto;
     const isBlocked = action === 'block';
 
-    const result = await this.userModel.updateMany(
+    const result = await this._userModel.updateMany(
       { _id: { $in: userIds } },
       { $set: { is_blocked: isBlocked } },
     );
@@ -124,6 +126,41 @@ export class AdminService {
     return {
       message: `${result.modifiedCount} users ${action}ed successfully`,
       modifiedCount: result.modifiedCount,
+    };
+  }
+
+  async getAllOwners() {
+    const owners = await this._ownerModel
+      .find({})
+      .sort({ createdAt: -1 })
+      .exec();
+
+    return {
+      owners,
+    };
+  }
+
+  async getDashBoard() {
+    const totalUsers = await this._userModel.countDocuments({});
+    const totalOwners = await this._ownerModel.countDocuments({});
+
+    const latestUsers = await this._userModel
+      .find({})
+      .select('fullName email createdAt')
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    const latestOwners = await this._ownerModel
+      .find({})
+      .select('firstName lastName email createdAt')
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    return {
+      totalUsers,
+      totalOwners,
+      latestUsers,
+      latestOwners,
     };
   }
 }

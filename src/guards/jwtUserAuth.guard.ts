@@ -1,7 +1,5 @@
 import {
   ExecutionContext,
-  HttpException,
-  HttpStatus,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -39,7 +37,7 @@ export class JwtUserGuard extends AuthGuard('userAccessToken') {
       }
 
       if (user && user.is_blocked) {
-        throw new HttpException('User is blocked', HttpStatus.FORBIDDEN);
+        throw new UnauthorizedException('User is blocked');
       }
 
       if (user.role !== decoded.role) {
@@ -54,6 +52,8 @@ export class JwtUserGuard extends AuthGuard('userAccessToken') {
         throw new UnauthorizedException('User Token expired');
       } else if (error instanceof jwt.JsonWebTokenError) {
         throw new UnauthorizedException('Invalid token');
+      } else if (error instanceof UnauthorizedException) {
+        throw error;
       } else {
         throw new UnauthorizedException('Authentication error');
       }

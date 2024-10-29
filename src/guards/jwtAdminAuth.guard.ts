@@ -24,9 +24,7 @@ export class JwtAdminGuard extends AuthGuard('adminAccessToken') {
     try {
       const decoded = jwt.decode(token) as { userId: string; role: string };
       const secretKey = process.env.JWT_SECRET;
-      // Now verify the token (this will check the expiration and signature)
       jwt.verify(token, secretKey);
-      console.log('my admin verified token', decoded);
 
       const userId = new Types.ObjectId(decoded.userId);
       const user = await this._loginRepository.findJwtUserById(userId);

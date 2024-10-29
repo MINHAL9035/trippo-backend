@@ -2,15 +2,33 @@ import { Injectable } from '@nestjs/common';
 import { ITripRepository } from '../interface/ITripRepository';
 import { InjectModel } from '@nestjs/mongoose';
 import { Trip } from '../schema/tripSchema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { ITrip } from '../interface/Itrip.interface';
 
 @Injectable()
 export class Triprepository implements ITripRepository {
-  constructor(@InjectModel(Trip.name) private _tripModel: Model<Trip | null>) {}
+  constructor(@InjectModel(Trip.name) private _tripModel: Model<Trip>) {}
 
-  async findTrip(tripName: string): Promise<ITrip> {
-    return await this._tripModel.findOne({ tripName }).exec();
+  async findTrip(tripName: string): Promise<ITrip | null> {
+    return this._tripModel.findOne({ tripName }).exec();
+  }
+
+  async findTripsByPage(
+    userId: Types.ObjectId,
+    page: number,
+    limit: number,
+  ): Promise<ITrip[]> {
+    return await this._tripModel
+      .find({ userId })
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean<ITrip[]>()
+      .exec();
+  }
+
+  async countTrips(userId: Types.ObjectId): Promise<number> {
+    return await this._tripModel.countDocuments({ userId });
   }
 
   async createTrip(tripData: ITrip): Promise<ITrip> {

@@ -1,5 +1,4 @@
-import { Type } from 'class-transformer';
-import { IsDate, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsString } from 'class-validator';
 
 export class TripDto {
   @IsString()
@@ -8,17 +7,9 @@ export class TripDto {
   @IsString()
   destination: string;
 
-  @IsOptional()
-  @IsNumber()
-  lengthOfStay?: number;
+  @IsDateString()
+  tripStartDate: string;
 
-  @IsOptional()
-  @Type(() => Date)
-  @IsDate()
-  startDate?: Date;
-
-  @IsOptional()
-  @Type(() => Date)
-  @IsDate()
-  endDate?: Date;
+  @IsDateString()
+  tripEndDate: string;
 }
