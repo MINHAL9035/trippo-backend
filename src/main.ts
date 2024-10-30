@@ -30,7 +30,6 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
   app.useGlobalFilters(new AllExceptionsFilter());
   app.use(cookieParser());
-
   await app.listen(3000);
 }
 bootstrap();

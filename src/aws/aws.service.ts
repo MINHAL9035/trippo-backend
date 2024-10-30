@@ -36,6 +36,9 @@ export class S3Service {
       return s3Response;
     } catch (error) {
       console.log(error);
+      throw error;
+    } finally {
+      params.Body = null;
     }
   }
 }

@@ -40,6 +40,7 @@ export class TripController {
       Image.Location,
       userId,
     );
+    tripImage.buffer = null;
     this._logger.log('my created trip', trip);
     return {
       message: 'Trip created successfully',
