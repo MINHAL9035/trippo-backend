@@ -29,7 +29,13 @@ export class CommunityController {
   ) {}
 
   @Post('createPost')
-  @UseInterceptors(FilesInterceptor('postImages'))
+  @UseInterceptors(
+    FilesInterceptor('postImages', 10, {
+      limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB limit per file
+      },
+    }),
+  )
   async createPost(
     @Req() request,
     @Body() createPostdto: CreatePostdto,
@@ -37,11 +43,16 @@ export class CommunityController {
   ) {
     try {
       const userId = request.user._id;
-      const uploadedImages = await Promise.all(
-        postImages.map((image) => this._s3Service.uploadFile(image)),
-      );
 
-      const imageLocations = uploadedImages.map((image) => image.Location);
+      // Process files sequentially instead of parallel
+      const imageLocations = [];
+      for (const image of postImages) {
+        const uploaded = await this._s3Service.uploadFile(image);
+        imageLocations.push(uploaded.Location);
+        // Clear the buffer after upload
+        delete image.buffer;
+      }
+
       const post = await this._communityService.createPost(
         createPostdto,
         imageLocations,
@@ -49,7 +60,8 @@ export class CommunityController {
       );
       return post;
     } catch (error) {
-      console.log('my error', error);
+      this._logger.error('Error in createPost:', error);
+      throw error;
     }
   }
 

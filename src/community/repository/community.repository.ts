@@ -18,11 +18,15 @@ export class CommunityRepository {
     return await newPost.save();
   }
 
-  async findPosts() {
+  async findPosts(page = 1, limit = 10) {
+    const skip = (page - 1) * limit;
     return await this._postModel
       .find({})
       .sort({ createdAt: -1 })
-      .populate('userId');
+      .skip(skip)
+      .limit(limit)
+      .populate('userId')
+      .lean();
   }
   async findAllUsers() {
     return await this._userModel.find({});
