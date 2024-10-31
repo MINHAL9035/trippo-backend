@@ -22,6 +22,7 @@ import { EditHotelDto } from '../dto/editHotel.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { S3Service } from 'src/aws/aws.service';
 import { JwtOwnerGuard } from 'src/guards/jwtOwner.guard';
+import { FileSizeValidationPipe } from 'src/common/pipes/file-size-validation.pipe';
 
 @Controller('hotelOwner')
 export class HotelController {
@@ -82,22 +83,44 @@ export class HotelController {
   }
 
   @Patch('editHotelInfo')
-  @UseInterceptors(FilesInterceptor('hotelImages'))
+  @UseInterceptors(
+    FilesInterceptor('hotelImages', 10, {
+      limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB limit per file
+      },
+    }),
+  )
   async editHotelInfo(
     @Body() editHotelDto: EditHotelDto,
     @Query('hotelId') hotelId: string,
-    @UploadedFiles() hotelImages: Array<Express.Multer.File>,
+    @UploadedFiles(new FileSizeValidationPipe())
+    hotelImages: Array<Express.Multer.File>,
   ) {
-    const newHotelId = new Types.ObjectId(hotelId);
-    const uploadedImages = await Promise.all(
-      hotelImages.map((image) => this._s3Service.uploadFile(image)),
-    );
-    const imageLocations = uploadedImages.map((image) => image.Location);
-    const updatedHotelData = {
-      ...editHotelDto,
-      images: imageLocations,
-    };
-    return this._hotelService.editHotelInfo(newHotelId, updatedHotelData);
+    try {
+      const newHotelId = new Types.ObjectId(hotelId);
+
+      // Process images sequentially instead of parallel
+      const imageLocations = [];
+      for (const image of hotelImages) {
+        try {
+          const uploaded = await this._s3Service.uploadFile(image);
+          imageLocations.push(uploaded.Location);
+        } finally {
+          // Clear the buffer after upload
+          delete image.buffer;
+        }
+      }
+
+      const updatedHotelData = {
+        ...editHotelDto,
+        images: imageLocations,
+      };
+
+      return this._hotelService.editHotelInfo(newHotelId, updatedHotelData);
+    } catch (error) {
+      this._logger.error('Error in editHotelInfo:', error);
+      throw error;
+    }
   }
 
   @Get('hotelDetails')

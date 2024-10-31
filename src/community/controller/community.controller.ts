@@ -17,6 +17,7 @@ import { CommunityService } from '../service/community.service';
 import { JwtUserGuard } from 'src/guards/jwtUserAuth.guard';
 import { Types } from 'mongoose';
 import { CommunityRepository } from '../repository/community.repository';
+import { FileSizeValidationPipe } from 'src/common/pipes/file-size-validation.pipe';
 
 @UseGuards(JwtUserGuard)
 @Controller('community')
@@ -32,25 +33,29 @@ export class CommunityController {
   @UseInterceptors(
     FilesInterceptor('postImages', 10, {
       limits: {
-        fileSize: 5 * 1024 * 1024,
+        fileSize: 5 * 1024 * 1024, // 5MB limit per file
       },
     }),
   )
   async createPost(
     @Req() request,
     @Body() createPostdto: CreatePostdto,
-    @UploadedFiles() postImages: Array<Express.Multer.File>,
+    @UploadedFiles(new FileSizeValidationPipe())
+    postImages: Array<Express.Multer.File>,
   ) {
     try {
       const userId = request.user._id;
+      const imageLocations: string[] = [];
 
-      // Process files sequentially instead of parallel
-      const imageLocations = [];
+      // Process one file at a time
       for (const image of postImages) {
-        const uploaded = await this._s3Service.uploadFile(image);
-        imageLocations.push(uploaded.Location);
-        // Clear the buffer after upload
-        delete image.buffer;
+        try {
+          const uploaded = await this._s3Service.uploadFile(image);
+          imageLocations.push(uploaded.Location);
+        } finally {
+          // Always clear buffer, even if upload fails
+          delete image.buffer;
+        }
       }
 
       const post = await this._communityService.createPost(
@@ -58,6 +63,7 @@ export class CommunityController {
         imageLocations,
         userId,
       );
+
       return post;
     } catch (error) {
       this._logger.error('Error in createPost:', error);

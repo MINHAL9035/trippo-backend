@@ -1,44 +1,41 @@
-import { Injectable } from '@nestjs/common';
-import * as AWS from 'aws-sdk';
+import { Injectable, Logger } from '@nestjs/common';
+import { S3 } from 'aws-sdk';
+import { Readable } from 'stream';
+
 @Injectable()
 export class S3Service {
-  AWS_S3_BUCKET = process.env.AWS_S3_BUCKET;
-  s3 = new AWS.S3({
-    accessKeyId: process.env.AWS_S3_ACCESS_KEY,
-    secretAccessKey: process.env.AWS_S3_KEY_SECRET,
-  });
+  private readonly s3: S3;
+  private readonly logger = new Logger(S3Service.name);
 
-  async uploadFile(file) {
-    console.log('s3file', file);
-    const { originalname } = file;
-    return await this.s3_upload(
-      file.buffer,
-      this.AWS_S3_BUCKET,
-      originalname,
-      file.mimetype,
-    );
+  constructor() {
+    this.s3 = new S3({
+      accessKeyId: process.env.AWS_S3_ACCESS_KEY,
+      secretAccessKey: process.env.AWS_S3_KEY_SECRET,
+    });
   }
 
-  async s3_upload(file, bucket, name, mimetype) {
-    const params = {
-      Bucket: bucket,
-      Key: String(name),
-      Body: file,
-      ACL: 'public-read',
-      ContentType: mimetype,
-      ContentDisposition: 'inline',
-      CreateBucketConfiguration: {
-        LocationConstraint: 'ap-south-1',
-      },
-    };
+  async uploadFile(
+    file: Express.Multer.File,
+  ): Promise<S3.ManagedUpload.SendData> {
     try {
-      const s3Response = await this.s3.upload(params).promise();
-      return s3Response;
+      const stream = Readable.from(file.buffer);
+
+      const uploadParams = {
+        Bucket: process.env.AWS_S3_BUCKET,
+        Key: `hotels/${Date.now()}-${file.originalname}`,
+        Body: stream,
+        ContentType: file.mimetype,
+      };
+
+      const result = await this.s3.upload(uploadParams).promise();
+
+      return result;
     } catch (error) {
-      console.log(error);
+      this.logger.error(`Failed to upload file ${file.originalname}:`, error);
       throw error;
     } finally {
-      params.Body = null;
+      // Ensure cleanup
+      file.buffer = null;
     }
   }
 }

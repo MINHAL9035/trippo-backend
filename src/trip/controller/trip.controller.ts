@@ -17,6 +17,8 @@ import { S3Service } from 'src/aws/aws.service';
 import { JwtUserGuard } from 'src/guards/jwtUserAuth.guard';
 import { Types } from 'mongoose';
 import { CreateAiTripDto } from '../dto/aiTripCreation.dto';
+import { FileSizeValidationPipe } from 'src/common/pipes/file-size-validation.pipe';
+
 @UseGuards(JwtUserGuard)
 @Controller('trip')
 export class TripController {
@@ -36,22 +38,30 @@ export class TripController {
   )
   async createTrip(
     @Req() request,
-    @UploadedFile() tripImage: Express.Multer.File,
+    @UploadedFile(new FileSizeValidationPipe()) tripImage: Express.Multer.File,
     @Body() tripDto: TripDto,
   ) {
-    const userId = request.user._id;
-    const Image = await this._s3Service.uploadFile(tripImage);
-    const trip = await this._tripService.create(
-      tripDto,
-      Image.Location,
-      userId,
-    );
-    tripImage.buffer = null;
-    this._logger.log('my created trip', trip);
-    return {
-      message: 'Trip created successfully',
-      trip,
-    };
+    try {
+      const userId = request.user._id;
+
+      const uploadedImage = await this._s3Service.uploadFile(tripImage);
+      delete tripImage.buffer;
+
+      const trip = await this._tripService.create(
+        tripDto,
+        uploadedImage.Location,
+        userId,
+      );
+
+      this._logger.log('Trip created successfully');
+      return {
+        message: 'Trip created successfully',
+        trip,
+      };
+    } catch (error) {
+      this._logger.error('Error in createTrip:', error);
+      throw error;
+    }
   }
 
   @Get('tripDetails')
