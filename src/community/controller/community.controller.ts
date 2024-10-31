@@ -32,7 +32,7 @@ export class CommunityController {
   @UseInterceptors(
     FilesInterceptor('postImages', 10, {
       limits: {
-        fileSize: 5 * 1024 * 1024, // 5MB limit per file
+        fileSize: 5 * 1024 * 1024,
       },
     }),
   )
