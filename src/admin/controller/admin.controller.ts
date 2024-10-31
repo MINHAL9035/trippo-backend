@@ -9,7 +9,6 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { AdminLoginRepository } from '../respository/admin.repository';
 import { LoginDto } from 'src/auth/dto/login.dto';
 import { AdminService } from '../service/admin.service';
 import { Response, Request } from 'express';
@@ -21,10 +20,7 @@ import { JwtAdminGuard } from 'src/guards/jwtAdminAuth.guard';
 export class AdminController {
   private readonly _logger = new Logger(AdminController.name);
 
-  constructor(
-    private readonly _adminrepository: AdminLoginRepository,
-    private readonly _adminService: AdminService,
-  ) {}
+  constructor(private readonly _adminService: AdminService) {}
 
   @Post('adminLogin')
   async adminLogin(

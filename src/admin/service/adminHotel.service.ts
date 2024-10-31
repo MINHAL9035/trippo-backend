@@ -33,7 +33,10 @@ export class AdminHotelService {
     const from = this._configService.get<string>('EMAIL_From');
     const websiteName = 'Trippo';
 
-    let subject, headerText, mainContent, ctaButton;
+    let subject: string,
+      headerText: string,
+      mainContent: string,
+      ctaButton: string;
 
     if (status === 'accepted') {
       subject = `Welcome to ${websiteName} - Your Account is Approved!`;

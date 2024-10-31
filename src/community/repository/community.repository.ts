@@ -31,7 +31,7 @@ export class CommunityRepository {
     return await this._postModel.find({ userId: userId });
   }
   async findSearchUsers(query: string) {
-    const searchRegex = new RegExp(query, 'i'); // 'i' for case-insensitive search
+    const searchRegex = new RegExp(query, 'i');
 
     try {
       const users = await this._userModel
