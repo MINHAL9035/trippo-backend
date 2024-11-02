@@ -9,12 +9,12 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { LoginDto } from 'src/auth/dto/login.dto';
+import { LoginDto } from '../../auth/dto/login.dto';
 import { AdminService } from '../service/admin.service';
 import { Response, Request } from 'express';
 import { UpdateUserStatusDto } from '../dto/updateUserStatus.dto';
-import { UserInterface } from 'src/user/interface/user/IUser.interface';
-import { JwtAdminGuard } from 'src/guards/jwtAdminAuth.guard';
+import { UserInterface } from '../../user/interface/user/IUser.interface';
+import { JwtAdminGuard } from '../../guards/jwtAdminAuth.guard';
 
 @Controller('admin')
 export class AdminController {

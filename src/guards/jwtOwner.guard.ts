@@ -6,7 +6,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import * as jwt from 'jsonwebtoken';
 import { Types } from 'mongoose';
-import { OwnerRepository } from 'src/hotel-owner/repository/ownerRepository';
+import { OwnerRepository } from '../hotel-owner/repository/ownerRepository';
 
 @Injectable()
 export class JwtOwnerGuard extends AuthGuard('ownerAccessToken') {

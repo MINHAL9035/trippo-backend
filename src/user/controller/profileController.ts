@@ -11,7 +11,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from '../service/user.service';
-import { JwtUserGuard } from 'src/guards/jwtUserAuth.guard';
+import { JwtUserGuard } from '../../guards/jwtUserAuth.guard';
 import { EditProfileDto } from '../dto/editProfile.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';

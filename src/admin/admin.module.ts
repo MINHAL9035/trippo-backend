@@ -1,21 +1,21 @@
 import { Module } from '@nestjs/common';
 import { AdminController } from './controller/admin.controller';
 import { AdminService } from './service/admin.service';
-import { UserModule } from 'src/user/user.module';
+import { UserModule } from '../user/user.module';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AdminLoginRepository } from './respository/admin.repository';
-import { AuthModule } from 'src/auth/auth.module';
+import { AuthModule } from '../auth/auth.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AdminRefreshTokenSchema } from './schema/adminRefreshToken.schema';
 import { AdminHotelController } from './controller/adminHotel.controller';
 import { AdminHotelService } from './service/adminHotel.service';
-import { ownerRequestSchema } from 'src/hotel-owner/schema/PendingRequest.schema';
+import { ownerRequestSchema } from '../hotel-owner/schema/PendingRequest.schema';
 import { AdminHotelRepository } from './respository/adminHotel.repository';
-import { OwnerSchema } from 'src/hotel-owner/schema/owner.schema';
-import { unverifiedOwnerSchema } from 'src/hotel-owner/schema/UnverifiedOwnerSchema';
-import { UnverifiedHotelSchema } from 'src/hotel-owner/schema/UnverifiedHotel';
-import { HotelSchema } from 'src/hotel-owner/schema/HotelSchema';
+import { OwnerSchema } from '../hotel-owner/schema/owner.schema';
+import { unverifiedOwnerSchema } from '../hotel-owner/schema/UnverifiedOwnerSchema';
+import { UnverifiedHotelSchema } from '../hotel-owner/schema/UnverifiedHotel';
+import { HotelSchema } from '../hotel-owner/schema/HotelSchema';
 
 @Module({
   imports: [

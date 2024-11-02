@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { User } from 'src/user/schema/user.schema';
+import { User } from '../../user/schema/user.schema';
 import { RefreshToken } from '../schema/refresh.token.schema';
 import { LoginDto } from '../dto/login.dto';
 import { ILoginRepository } from '../interface/ILoginRepository.interface';
-import { UserInterface } from 'src/user/interface/user/IUser.interface';
+import { UserInterface } from '../../user/interface/user/IUser.interface';
 
 @Injectable()
 export class LoginRepository implements ILoginRepository {

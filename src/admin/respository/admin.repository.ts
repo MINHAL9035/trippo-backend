@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { User } from 'src/user/schema/user.schema';
+import { User } from '../../user/schema/user.schema';
 import { Model, Types } from 'mongoose';
-import { LoginDto } from 'src/auth/dto/login.dto';
+import { LoginDto } from '../../auth/dto/login.dto';
 import { AdminRefreshToken } from '../schema/adminRefreshToken.schema';
 
 @Injectable()

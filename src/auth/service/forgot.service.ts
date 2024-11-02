@@ -6,8 +6,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ForgotRepository } from '../repository/forgotPassword.repository';
-import { OtpService } from 'src/user/service/otp.service';
-import { OtpRepository } from 'src/user/repository/Otp.repository';
+import { OtpService } from '../../user/service/otp.service';
+import { OtpRepository } from '../../user/repository/Otp.repository';
 import { LoginRepository } from '../repository/login.repository';
 import * as bcrypt from 'bcrypt';
 import { IForgotService } from '../interface/IForgotService.interface';

@@ -3,13 +3,13 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { AdminHotelRepository } from '../respository/adminHotel.repository';
 import { Types } from 'mongoose';
-import { Owner } from 'src/hotel-owner/schema/owner.schema';
-import { UnverifiedOwner } from 'src/hotel-owner/schema/UnverifiedOwnerSchema';
-import { OwnerRequest } from 'src/hotel-owner/schema/PendingRequest.schema';
+import { Owner } from '../../hotel-owner/schema/owner.schema';
+import { UnverifiedOwner } from '../../hotel-owner/schema/UnverifiedOwnerSchema';
+import { OwnerRequest } from '../../hotel-owner/schema/PendingRequest.schema';
 import { ConfigService } from '@nestjs/config';
 import { MailerService } from '@nestjs-modules/mailer';
-import { UnverifiedHotel } from 'src/hotel-owner/schema/UnverifiedHotel';
-import { Hotel } from 'src/hotel-owner/schema/HotelSchema';
+import { UnverifiedHotel } from '../../hotel-owner/schema/UnverifiedHotel';
+import { Hotel } from '../../hotel-owner/schema/HotelSchema';
 
 @Injectable()
 export class AdminHotelService {

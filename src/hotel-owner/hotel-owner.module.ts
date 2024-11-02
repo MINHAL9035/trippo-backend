@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { OwnerController } from './controller/owner.controller';
-import { OtpService } from 'src/user/service/otp.service';
-import { OtpRepository } from 'src/user/repository/Otp.repository';
+import { OtpService } from '../user/service/otp.service';
+import { OtpRepository } from '../user/repository/Otp.repository';
 import { MongooseModule } from '@nestjs/mongoose';
-import { OtpSchema } from 'src/user/schema/Otp.schema';
+import { OtpSchema } from '../user/schema/Otp.schema';
 import { OwnerRepository } from './repository/ownerRepository';
 import { unverifiedOwnerSchema } from './schema/UnverifiedOwnerSchema';
 import { HotelOwnerService } from './service/hotelOwner.service';
@@ -17,8 +17,8 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
 import { OwnerRefreshTokenSchema } from './schema/ownerRefreshToken.schema';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UnverifiedHotelSchema } from './schema/UnverifiedHotel';
-import { S3Service } from 'src/aws/aws.service';
-import { CompletedBookingSchema } from 'src/user/schema/completedBookings.schema';
+import { S3Service } from '../aws/aws.service';
+import { CompletedBookingSchema } from '../user/schema/completedBookings.schema';
 
 @Module({
   imports: [

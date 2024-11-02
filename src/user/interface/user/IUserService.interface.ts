@@ -1,4 +1,4 @@
-import { UserRegistrationDto } from 'src/user/dto/user.registration.dto';
+import { UserRegistrationDto } from '../../dto/user.registration.dto';
 import { UnverifiedUserInterface } from './IUnverifiedUser.interface';
 import { UserInterface } from './IUser.interface';
 

@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { AdminLoginRepository } from '../respository/admin.repository';
 import { JwtService } from '@nestjs/jwt';
-import { LoginDto } from 'src/auth/dto/login.dto';
+import { LoginDto } from '../../auth/dto/login.dto';
 import * as bcrypt from 'bcrypt';
 import { Model, Types } from 'mongoose';
 import { Response } from 'express';
@@ -13,8 +13,8 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { UpdateUserStatusDto } from '../dto/updateUserStatus.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { User } from 'src/user/schema/user.schema';
-import { Owner } from 'src/hotel-owner/schema/owner.schema';
+import { User } from '../../user/schema/user.schema';
+import { Owner } from '../../hotel-owner/schema/owner.schema';
 
 @Injectable()
 export class AdminService {

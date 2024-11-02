@@ -10,7 +10,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Wallet } from '../schema/wallet.schema';
 import { Model, Types } from 'mongoose';
 import { CompletedBooking } from '../schema/completedBookings.schema';
-import { Hotel } from 'src/hotel-owner/schema/HotelSchema';
+import { Hotel } from '../../hotel-owner/schema/HotelSchema';
 
 @Injectable()
 export class ProfileService {

@@ -13,8 +13,8 @@ import {
 import { TripDto } from '../dto/createTrip.dto';
 import { TripService } from '../service/trip.service';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { S3Service } from 'src/aws/aws.service';
-import { JwtUserGuard } from 'src/guards/jwtUserAuth.guard';
+import { S3Service } from '../../aws/aws.service';
+import { JwtUserGuard } from '../../guards/jwtUserAuth.guard';
 import { Types } from 'mongoose';
 import { CreateAiTripDto } from '../dto/aiTripCreation.dto';
 @UseGuards(JwtUserGuard)

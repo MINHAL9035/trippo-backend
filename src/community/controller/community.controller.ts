@@ -12,9 +12,9 @@ import {
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { CreatePostdto } from '../dto/createPost.dto';
-import { S3Service } from 'src/aws/aws.service';
+import { S3Service } from '../../aws/aws.service';
 import { CommunityService } from '../service/community.service';
-import { JwtUserGuard } from 'src/guards/jwtUserAuth.guard';
+import { JwtUserGuard } from '../../guards/jwtUserAuth.guard';
 import { Types } from 'mongoose';
 import { CommunityRepository } from '../repository/community.repository';
 

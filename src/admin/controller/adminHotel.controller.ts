@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { AdminHotelService } from '../service/adminHotel.service';
 import { Types } from 'mongoose';
-import { JwtAdminGuard } from 'src/guards/jwtAdminAuth.guard';
+import { JwtAdminGuard } from '../../guards/jwtAdminAuth.guard';
 
 @UseGuards(JwtAdminGuard)
 @Controller('admin')

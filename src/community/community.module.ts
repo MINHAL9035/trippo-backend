@@ -4,10 +4,10 @@ import { CommunityService } from './service/community.service';
 import { CommunityRepository } from './repository/community.repository';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PostSchema } from './schema/post.schema';
-import { S3Service } from 'src/aws/aws.service';
-import { UserSchema } from 'src/user/schema/user.schema';
-import { RefreshTokenSchema } from 'src/auth/schema/refresh.token.schema';
-import { LoginRepository } from 'src/auth/repository/login.repository';
+import { S3Service } from '../aws/aws.service';
+import { UserSchema } from '../user/schema/user.schema';
+import { RefreshTokenSchema } from '../auth/schema/refresh.token.schema';
+import { LoginRepository } from '../auth/repository/login.repository';
 
 @Module({
   imports: [

@@ -1,19 +1,19 @@
 import { Module } from '@nestjs/common';
 import { AuthController } from './controller/auth.controller';
 import { AuthService } from './service/auth.service';
-import { UserModule } from 'src/user/user.module';
+import { UserModule } from '../user/user.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { RefreshTokenSchema } from './schema/refresh.token.schema';
 import { LoginRepository } from './repository/login.repository';
 import googleOauthConfig from './config/google-oauth.config';
-import { User, UserSchema } from 'src/user/schema/user.schema';
+import { User, UserSchema } from '../user/schema/user.schema';
 import { ForgotController } from './controller/forgotPassword.controller';
 import { ForgotService } from './service/forgot.service';
 import { ForgotRepository } from './repository/forgotPassword.repository';
-import { OtpService } from 'src/user/service/otp.service';
-import { OtpRepository } from 'src/user/repository/Otp.repository';
+import { OtpService } from '../user/service/otp.service';
+import { OtpRepository } from '../user/repository/Otp.repository';
 
 @Module({
   imports: [

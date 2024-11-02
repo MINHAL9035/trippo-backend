@@ -5,16 +5,16 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { OTP } from 'src/user/interface/otp/IOtp.interface';
-import { OtpRepository } from 'src/user/repository/Otp.repository';
+import { OTP } from '../../user/interface/otp/IOtp.interface';
+import { OtpRepository } from '../../user/repository/Otp.repository';
 import * as crypto from 'crypto';
 import { MailerService } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
 import { OwnerRepository } from '../repository/ownerRepository';
 import { OwnerInterface } from '../interface/IOwner.interface';
 import { UpdateOwnerDto } from '../dto/createOwner.dto';
-import { LoginDto } from 'src/auth/dto/login.dto';
-import { IOwnerLogin } from 'src/auth/interface/ILogin.interface';
+import { LoginDto } from '../../auth/dto/login.dto';
+import { IOwnerLogin } from '../../auth/interface/ILogin.interface';
 import * as bcrypt from 'bcrypt';
 import { Types } from 'mongoose';
 import { JwtService } from '@nestjs/jwt';

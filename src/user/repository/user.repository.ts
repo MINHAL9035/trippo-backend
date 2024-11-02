@@ -6,13 +6,13 @@ import { User } from '../schema/user.schema';
 import { UnverifiedUser } from '../schema/UnverifiedUser.schema';
 import { UnverifiedUserInterface } from '../interface/user/IUnverifiedUser.interface';
 import { IUserRepository } from '../interface/user/IuserRepository.interface';
-import { Hotel } from 'src/hotel-owner/schema/HotelSchema';
 import { Types } from 'mongoose';
 import { PendingBooking } from '../schema/pendingBooking.schema';
 import { PendingBookingDto } from '../dto/pendingBooking.dto';
 import { CompletedBooking } from '../schema/completedBookings.schema';
 import { SearchState } from '../interface/user/ISearchData.interface';
 import { Wallet } from '../schema/wallet.schema';
+import { Hotel } from '../../hotel-owner/schema/HotelSchema';
 
 @Injectable()
 export class UserRepository implements IUserRepository {

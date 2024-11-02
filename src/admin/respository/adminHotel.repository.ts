@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { OwnerRequest } from 'src/hotel-owner/schema/PendingRequest.schema';
-import { UnverifiedOwner } from 'src/hotel-owner/schema/UnverifiedOwnerSchema';
+import { OwnerRequest } from '../../hotel-owner/schema/PendingRequest.schema';
+import { UnverifiedOwner } from '../../hotel-owner/schema/UnverifiedOwnerSchema';
 @Injectable()
 export class AdminHotelRepository {
   constructor(

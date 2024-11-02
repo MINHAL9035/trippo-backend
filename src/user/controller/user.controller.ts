@@ -15,7 +15,7 @@ import { OtpService } from '../service/otp.service';
 import { VerifyOtpDto } from '../dto/verifyOtp.dto';
 import { Types } from 'mongoose';
 import { PendingBookingDto } from '../dto/pendingBooking.dto';
-import { JwtUserGuard } from 'src/guards/jwtUserAuth.guard';
+import { JwtUserGuard } from '../../guards/jwtUserAuth.guard';
 import { SearchState } from '../interface/user/ISearchData.interface';
 import { ProfileService } from '../service/profile.service';
 
