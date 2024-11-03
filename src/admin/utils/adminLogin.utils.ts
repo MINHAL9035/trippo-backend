@@ -32,14 +32,14 @@ export function setAdminTokenCookies(
   res.cookie('adminAccessToken', tokens.accessToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
   });
 
   res.cookie('adminRefreshToken', tokens.refreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: 'none',
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 }
@@ -48,14 +48,14 @@ export function clearAdminTokenCookies(res: Response) {
   res.cookie('adminAccessToken', '', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: 'none',
     expires: new Date(0),
   });
 
   res.cookie('adminRefreshToken', '', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: 'none',
     expires: new Date(0),
   });
 }
