@@ -8,7 +8,7 @@ import { SubmitDetailsDto } from '../dto/submitDetails.dto';
 import { OwnerRequest } from '../schema/PendingRequest.schema';
 import { UnverifiedHotel } from '../schema/UnverifiedHotel';
 import { EditHotelDto } from '../dto/editHotel.dto';
-import { CompletedBooking } from 'src/user/schema/completedBookings.schema';
+import { CompletedBooking } from '../../user/schema/completedBookings.schema';
 
 @Injectable()
 export class HotelRepository {

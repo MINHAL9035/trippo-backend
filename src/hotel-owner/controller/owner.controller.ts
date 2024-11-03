@@ -2,12 +2,12 @@ import { Body, Controller, Get, Patch, Post, Query, Res } from '@nestjs/common';
 import { HotelOwnerOtpDto } from '../dto/hotelOwnerOtpdto';
 import { UpdateOwnerDto } from '../dto/createOwner.dto';
 import { HotelOwnerService } from '../service/hotelOwner.service';
-import { LoginDto } from 'src/auth/dto/login.dto';
+import { LoginDto } from '../../auth/dto/login.dto';
 import { Response } from 'express';
 import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Owner } from '../schema/owner.schema';
-import { CompletedBooking } from 'src/user/schema/completedBookings.schema';
+import { CompletedBooking } from '../../user/schema/completedBookings.schema';
 import { Hotel } from '../schema/HotelSchema';
 
 @Controller('hotelOwner')

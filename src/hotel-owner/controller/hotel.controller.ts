@@ -20,8 +20,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Hotel } from '../schema/HotelSchema';
 import { EditHotelDto } from '../dto/editHotel.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { S3Service } from 'src/aws/aws.service';
-import { JwtOwnerGuard } from 'src/guards/jwtOwner.guard';
+import { S3Service } from '../../aws/aws.service';
+import { JwtOwnerGuard } from '../../guards/jwtOwner.guard';
 
 @Controller('hotelOwner')
 export class HotelController {

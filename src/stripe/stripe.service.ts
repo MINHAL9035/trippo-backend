@@ -2,9 +2,9 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Hotel } from 'src/hotel-owner/schema/HotelSchema';
-import { CompletedBooking } from 'src/user/schema/completedBookings.schema';
-import { PendingBooking } from 'src/user/schema/pendingBooking.schema';
+import { Hotel } from '../hotel-owner/schema/HotelSchema';
+import { CompletedBooking } from '../user/schema/completedBookings.schema';
+import { PendingBooking } from '../user/schema/pendingBooking.schema';
 import Stripe from 'stripe';
 import { Types } from 'mongoose';
 
