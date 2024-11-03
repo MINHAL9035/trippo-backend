@@ -5,7 +5,7 @@ import { UserInterface } from '../interface/user/IUser.interface';
 import { User } from '../schema/user.schema';
 import { UnverifiedUser } from '../schema/UnverifiedUser.schema';
 import { UnverifiedUserInterface } from '../interface/user/IUnverifiedUser.interface';
-import { IUserRepository } from '../interface/user/IuserRepository.interface';
+import { IUserRepository } from '../interface/user/IUserRepository.interface';
 import { Types } from 'mongoose';
 import { PendingBooking } from '../schema/pendingBooking.schema';
 import { PendingBookingDto } from '../dto/pendingBooking.dto';
