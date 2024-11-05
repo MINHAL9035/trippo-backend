@@ -171,6 +171,9 @@ export class StripeService {
       'STRIPE_WEBHOOK_SECRET',
     );
 
+    console.log('dsjb', webhookSecret);
+    console.log('ds', signature);
+
     if (!webhookSecret) {
       this.logger.error('Stripe webhook secret is not set');
       throw new Error('Stripe webhook secret is not set');
