@@ -92,4 +92,9 @@ export class CommunityController {
       })),
     };
   }
+  @Get('groupDetails')
+  async getGroupDetails(@Query('groupId') groupId: string) {
+    const group = await this._communityRepository.findGroup(groupId);
+    return group;
+  }
 }

@@ -6,16 +6,11 @@ export class Comment extends Document {
   @Prop({ required: true, ref: 'User' })
   userId: Types.ObjectId;
 
+  @Prop({ type: Types.ObjectId, required: true, ref: 'Post' })
+  postId: Types.ObjectId;
+
   @Prop({ required: true })
   text: string;
-
-  @Prop({
-    type: [
-      { userId: { type: Types.ObjectId, ref: 'User' }, text: { type: String } },
-    ],
-    default: [],
-  })
-  replies: { userId: Types.ObjectId; text: string }[];
 }
 
 export const CommentSchema = SchemaFactory.createForClass(Comment);

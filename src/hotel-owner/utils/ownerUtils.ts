@@ -25,32 +25,34 @@ export function setOwnerTokenCookies(
   res: Response,
   tokens: { accessToken: string; refreshToken: string },
 ) {
+  const isProduction = process.env.NODE_ENV === 'production';
   res.cookie('ownerAccessToken', tokens.accessToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'none',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'strict',
     maxAge: 1 * 24 * 60 * 60 * 1000,
   });
   res.cookie('ownerRefreshToken', tokens.refreshToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'none',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'strict',
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 }
 
 export function clearOwnerTokenCookies(res: Response) {
+  const isProduction = process.env.NODE_ENV === 'production';
   res.cookie('ownerAccessToken', '', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'none',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'strict',
     expires: new Date(0),
   });
 
   res.cookie('ownerRefreshToken', '', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'none',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'strict',
     expires: new Date(0),
   });
 }

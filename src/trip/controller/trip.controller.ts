@@ -17,6 +17,8 @@ import { S3Service } from '../../aws/aws.service';
 import { JwtUserGuard } from '../../guards/jwtUserAuth.guard';
 import { Types } from 'mongoose';
 import { CreateAiTripDto } from '../dto/aiTripCreation.dto';
+import { Triprepository } from '../repository/tripRepository';
+import { SavePlaceDto } from '../dto/savePlace.dto';
 @UseGuards(JwtUserGuard)
 @Controller('trip')
 export class TripController {
@@ -24,6 +26,7 @@ export class TripController {
   constructor(
     private readonly _tripService: TripService,
     private readonly _s3Service: S3Service,
+    private readonly _tripRepository: Triprepository,
   ) {}
 
   @Post('create')
@@ -73,5 +76,23 @@ export class TripController {
   @Get('ai-trip-details')
   async getAiTrip(@Query('tripId') tripId: string) {
     return this._tripService.getAiTrip(tripId);
+  }
+
+  @Get('getMyTrips')
+  async getMyTrips(@Req() request) {
+    const userId = request.user._id;
+    return this._tripRepository.findMyTrips(userId);
+  }
+
+  @Post('createTripPlace')
+  async savePlaceToTrip(@Body() SavePlaceDto: SavePlaceDto) {
+    console.log('my jd', SavePlaceDto);
+    return await this._tripService.savePlaceToTrip(SavePlaceDto);
+  }
+
+  @Get('detailsTrip')
+  async getTripDetails(@Query('id') id: string) {
+    const tripId = new Types.ObjectId(id);
+    return await this._tripRepository.findMyTripDetails(tripId);
   }
 }

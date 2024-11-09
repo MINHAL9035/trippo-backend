@@ -9,6 +9,7 @@ import { UserSchema } from '../user/schema/user.schema';
 import { RefreshTokenSchema } from '../auth/schema/refresh.token.schema';
 import { LoginRepository } from '../auth/repository/login.repository';
 import { AiTripSchema } from './schema/aiTrip.schema';
+import { SavedPlaceSchema } from './schema/savePlace.schema';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { AiTripSchema } from './schema/aiTrip.schema';
       { name: 'User', schema: UserSchema },
       { name: 'RefreshToken', schema: RefreshTokenSchema },
       { name: 'AiTrip', schema: AiTripSchema },
+      { name: 'SavedPlace', schema: SavedPlaceSchema },
     ]),
   ],
   controllers: [TripController],

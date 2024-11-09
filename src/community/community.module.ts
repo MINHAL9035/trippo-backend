@@ -8,12 +8,14 @@ import { S3Service } from '../aws/aws.service';
 import { UserSchema } from '../user/schema/user.schema';
 import { RefreshTokenSchema } from '../auth/schema/refresh.token.schema';
 import { LoginRepository } from '../auth/repository/login.repository';
+import { GroupSchema } from './schema/group.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: 'Post', schema: PostSchema },
       { name: 'User', schema: UserSchema },
+      { name: 'Group', schema: GroupSchema },
       { name: 'RefreshToken', schema: RefreshTokenSchema },
     ]),
   ],

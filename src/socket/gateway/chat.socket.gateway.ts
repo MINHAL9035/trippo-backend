@@ -1,4 +1,6 @@
 import {
+  ConnectedSocket,
+  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
   SubscribeMessage,
@@ -6,38 +8,24 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { SocketService } from '../service/socket.service';
 import { Message } from '../schema/message.schema';
-import { Group } from '../schema/group.schema';
-
-interface MessagePayload {
-  message: {
-    senderId: string;
-    receiverId: string;
-    content: string;
-  };
-}
-
-interface GroupMessagePayload {
-  groupId: string;
-  message: {
-    senderId: string;
-    content: string;
-  };
-}
+import { Model } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
+import { User } from '../../user/schema/user.schema';
 
 @WebSocketGateway({ cors: true })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  @WebSocketServer() server: Server;
-  private userSocketMap: Map<string, string> = new Map();
+  @WebSocketServer()
+  server: Server;
 
   constructor(
     @InjectModel(Message.name) private messageModel: Model<Message>,
-    @InjectModel(Group.name) private groupModel: Model<Group>,
-    private readonly _socketService: SocketService,
+    @InjectModel(User.name) private userModel: Model<User>,
   ) {}
+
+  private getRoomId(user1Id: string, user2Id: string): string {
+    return [user1Id, user2Id].sort().join('-');
+  }
 
   handleConnection(client: Socket) {
     console.log(`Client connected: ${client.id}`);
@@ -45,125 +33,106 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   handleDisconnect(client: Socket) {
     console.log(`Client disconnected: ${client.id}`);
-    for (const [userId, socketId] of this.userSocketMap.entries()) {
-      if (socketId === client.id) {
-        this.userSocketMap.delete(userId);
-        break;
-      }
-    }
   }
 
-  @SubscribeMessage('register')
-  handleRegister(client: Socket, userId: string) {
-    this.userSocketMap.set(userId, client.id);
-    console.log(`User ${userId} registered with socket ${client.id}`);
-  }
-
-  @SubscribeMessage('createGroup')
-  async handleCreateGroup(
-    client: Socket,
-    payload: { name: string; members: string[] },
+  @SubscribeMessage('initializeChat')
+  async handleInitializeChat(
+    @MessageBody() data: { currentUserId: string; otherUserId: string },
+    @ConnectedSocket() client: Socket,
   ) {
     try {
-      const newGroup = new this.groupModel({
-        name: payload.name,
-        members: payload.members.map((id) => new Types.ObjectId(id)),
-        createdBy: payload.members[0], // Assuming the first member is the creator
-        createdAt: new Date(),
-      });
+      const roomId = this.getRoomId(data.currentUserId, data.otherUserId);
+      client.join(roomId);
 
-      const savedGroup = await newGroup.save();
+      const messages = await this.messageModel
+        .find({
+          $or: [
+            { senderId: data.currentUserId, receiverId: data.otherUserId },
+            { senderId: data.otherUserId, receiverId: data.currentUserId },
+          ],
+        })
+        .sort({ createdAt: 1 })
+        .exec();
 
-      // Notify all group members
-      payload.members.forEach((memberId) => {
-        const memberSocketId = this.userSocketMap.get(memberId);
-        if (memberSocketId) {
-          this.server.to(memberSocketId).emit('groupCreated', savedGroup);
-        }
-      });
+      client.emit('previousMessages', messages);
 
-      return savedGroup;
+      return { status: 'success', roomId };
     } catch (error) {
-      console.error('Error creating group:', error);
-      throw error;
+      console.error('Error initializing chat:', error);
     }
   }
 
-  @SubscribeMessage('joinGroup')
-  async handleJoinGroup(
-    client: Socket,
-    payload: { groupId: string; userId: string },
+  @SubscribeMessage('sendMessage')
+  async handleMessage(
+    @MessageBody()
+    data: {
+      senderId: string;
+      receiverId: string;
+      content: string;
+    },
   ) {
-    try {
-      const payUserId = new Types.ObjectId(payload.userId);
-      const group = await this.groupModel.findById(payload.groupId);
-      if (!group.members.includes(payUserId)) {
-        group.members.push(new Types.ObjectId(payload.userId));
-        await group.save();
-
-        // Notify all group members
-        group.members.forEach((memberId) => {
-          const memberSocketId = this.userSocketMap.get(memberId.toString());
-          if (memberSocketId) {
-            this.server.to(memberSocketId).emit('userJoinedGroup', {
-              groupId: payload.groupId,
-              userId: payload.userId,
-            });
-          }
-        });
-      }
-    } catch (error) {
-      console.error('Error joining group:', error);
-      throw error;
-    }
-  }
-
-  @SubscribeMessage('sendGroupMessage')
-  async handleGroupMessage(client: Socket, payload: GroupMessagePayload) {
     try {
       const newMessage = new this.messageModel({
-        senderId: new Types.ObjectId(payload.message.senderId),
-        groupId: new Types.ObjectId(payload.groupId),
-        content: payload.message.content,
+        senderId: data.senderId,
+        receiverId: data.receiverId,
+        content: data.content,
         createdAt: new Date(),
       });
 
-      const savedMessage = await newMessage.save();
-      const group = await this.groupModel.findById(payload.groupId);
+      await newMessage.save();
 
-      // Broadcast message to all group members
-      group.members.forEach((memberId) => {
-        const memberSocketId = this.userSocketMap.get(memberId.toString());
-        if (memberSocketId) {
-          this.server.to(memberSocketId).emit('groupMessage', {
-            groupId: payload.groupId,
-            message: savedMessage,
-          });
-        }
-      });
+      const roomId = this.getRoomId(data.senderId, data.receiverId);
+      this.server.to(roomId).emit('receiveMessage', newMessage);
 
-      return savedMessage;
+      return { status: 'success' };
     } catch (error) {
-      console.error('Error sending group message:', error);
-      throw error;
+      console.error('Error sending message:', error);
     }
   }
 
-  // Existing message handling...
-  @SubscribeMessage('sendMessage')
-  async handleMessage(client: Socket, payload: MessagePayload) {
-    const { message } = payload;
-    const newMessage = new this.messageModel({
-      senderId: new Types.ObjectId(message.senderId),
-      receiverId: new Types.ObjectId(message.receiverId),
-      content: message.content,
-    });
-    await newMessage.save();
+  @SubscribeMessage('leaveChat')
+  handleLeaveChat(
+    @MessageBody() data: { currentUserId: string; otherUserId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const roomId = this.getRoomId(data.currentUserId, data.otherUserId);
+    client.leave(roomId);
+    return { status: 'success' };
+  }
 
-    client.emit('newMessage', newMessage);
-    const receiverSocketId = this.userSocketMap.get(message.receiverId);
-    if (receiverSocketId) {
-      this.server.to(receiverSocketId).emit('newMessage', newMessage);
+  @SubscribeMessage('getUserMessageList')
+  async handleSendMessageList(
+    @MessageBody() data: { userId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    try {
+      const messages = await this.messageModel
+        .find({
+          $or: [{ senderId: data.userId }, { receiverId: data.userId }],
+        })
+        .populate('senderId')
+        .populate('receiverId')
+        .sort({ createdAt: 1 })
+        .exec();
+
+      const userIds = new Set();
+      messages.forEach((message) => {
+        userIds.add(message.senderId._id.toString());
+        userIds.add(message.receiverId._id.toString());
+      });
+      userIds.delete(data.userId);
+      const users = await this.userModel
+        .find({
+          _id: { $in: Array.from(userIds) },
+        })
+        .select('_id fullName userName image')
+        .exec();
+
+      client.emit('userList', users);
+      return { status: 'success' };
+    } catch (error) {
+      console.log(error);
+      throw new Error();
     }
   }
 }

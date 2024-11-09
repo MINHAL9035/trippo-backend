@@ -5,12 +5,14 @@ import { Post } from '../schema/post.schema';
 import { IPostInterface } from '../interface/IPost.interface';
 import { User } from '../../user/schema/user.schema';
 import { Types } from 'mongoose';
+import { Group } from '../schema/group.schema';
 
 @Injectable()
 export class CommunityRepository {
   constructor(
     @InjectModel(Post.name) private _postModel: Model<Post>,
     @InjectModel(User.name) private _userModel: Model<User>,
+    @InjectModel(Group.name) private _groupModel: Model<Group>,
   ) {}
 
   async createPost(postData: IPostInterface): Promise<Post> {
@@ -54,5 +56,9 @@ export class CommunityRepository {
 
   async findUserByUserName(userName: string) {
     return await this._userModel.findOne({ userName: userName });
+  }
+
+  async findGroup(groupId: string) {
+    return await this._groupModel.findOne({ groupId: groupId });
   }
 }

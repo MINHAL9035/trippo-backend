@@ -1,4 +1,9 @@
-import { ConflictException, Injectable, Logger } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { ITripService } from '../interface/ITripService';
 import { Triprepository } from '../repository/tripRepository';
 import { TripDto } from '../dto/createTrip.dto';
@@ -7,6 +12,9 @@ import { Model, Types } from 'mongoose';
 import { CreateAiTripDto } from '../dto/aiTripCreation.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { AiTrip } from '../schema/aiTrip.schema';
+import { SavePlaceDto } from '../dto/savePlace.dto';
+import { Trip } from '../schema/tripSchema';
+import { SavedPlace } from '../schema/savePlace.schema';
 
 @Injectable()
 export class TripService implements ITripService {
@@ -14,6 +22,9 @@ export class TripService implements ITripService {
   constructor(
     private readonly _tripRepository: Triprepository,
     @InjectModel(AiTrip.name) private readonly _aiTripModel: Model<AiTrip>,
+    @InjectModel(Trip.name) private readonly _tripModel: Model<Trip>,
+    @InjectModel(SavedPlace.name)
+    private readonly _savePlaceModel: Model<SavedPlace>,
   ) {}
 
   async create(
@@ -85,5 +96,17 @@ export class TripService implements ITripService {
       this._logger.error('Error in getAiTrip', error);
       throw error;
     }
+  }
+
+  async savePlaceToTrip(SavePlaceDto: SavePlaceDto) {
+    const trip = await this._tripModel.findById(SavePlaceDto.tripId);
+    if (!trip) {
+      throw new NotFoundException('Trip not found');
+    }
+    const savedPlace = new this._savePlaceModel({
+      tripId: new Types.ObjectId(SavePlaceDto.tripId),
+      placeData: SavePlaceDto.placeData,
+    });
+    return await savedPlace.save();
   }
 }
