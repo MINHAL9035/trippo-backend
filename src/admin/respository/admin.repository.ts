@@ -14,6 +14,12 @@ export class AdminLoginRepository {
     private _adminRefreshToken: Model<AdminRefreshToken>,
   ) {}
 
+  /**
+   *
+   * @param userData
+   * @returns
+   */
+
   async find(userData: LoginDto): Promise<User | null> {
     const user = await this._userModel.findOne({
       email: userData.email,
